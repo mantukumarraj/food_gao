@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-
-import 'Home_Page.dart';
+import 'package:foodgeo_partner/views/home/home_screen.dart';
 
 void main() {
   runApp(const MyApp());
