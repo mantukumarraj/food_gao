@@ -7,7 +7,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:foodgeo_partner/Screen/user_register.dart';
+import 'package:foodgeo_partner/main.dart';
 
 
 void main() {
