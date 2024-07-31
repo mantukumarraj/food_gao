@@ -41,10 +41,11 @@ dependencies:
   provider: ^6.1.2
   intl_phone_field: ^3.0.1
   image_picker: ^1.1.2
-
   firebase_auth: ^5.1.2
   firebase_storage: ^12.1.1
   cloud_firestore: ^5.1.0
+  geolocator: ^10.0.1
+  google_maps_flutter: ^2.7.0
 
 dev_dependencies:
   flutter_test:

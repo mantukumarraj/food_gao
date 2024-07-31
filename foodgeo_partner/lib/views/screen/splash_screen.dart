@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:foodgeo_partner/views/screen/location.dart';
 import 'dart:async';
 
 import 'login_screen.dart';
@@ -26,9 +27,9 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     _controller.forward();
 
-  //   Timer(Duration(seconds: 4), () {
-  //     Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => LoginScreen()));
-  //   });
+    Timer(Duration(seconds: 4), () {
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => LocationScreen()));
+    });
    }
 
   @override
