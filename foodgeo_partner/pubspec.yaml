@@ -21,7 +21,6 @@ version: 1.0.0+1
 environment:
   sdk: '>=3.3.2 <4.0.0'
 
-
 # Dependencies specify other packages that your package needs in order to work.
 # To automatically upgrade your package dependencies to the latest versions
 # consider running `flutter pub upgrade --major-versions`. Alternatively,
@@ -36,12 +35,16 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.6
-  carousel_slider: ^4.0.0
+  carousel_slider: ^4.2.1
+  cached_network_image: ^3.3.1
+  firebase_core: any
+  provider: ^6.1.2
   intl_phone_field: ^3.0.1
-  provider: ^6.0.4
   image_picker: ^1.1.2
-  google_fonts: ^3.0.1
-  firebase_core: ^3.2.0
+
+  firebase_auth: ^5.1.2
+  firebase_storage: ^12.1.1
+  cloud_firestore: ^5.1.0
 
 dev_dependencies:
   flutter_test:
