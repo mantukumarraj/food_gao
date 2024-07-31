@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
-
 import 'login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -27,7 +26,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     _controller.forward();
 
     Timer(Duration(seconds: 4), () {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => LoginScreen()));
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => LoginScreen()));
     });
   }
 
@@ -41,16 +40,11 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final screenHeight = mediaQuery.size.height;
-    final screenWidth = mediaQuery.size.width;
 
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [Colors.black, Colors.orange],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: Colors.white
         ),
         child: Center(
           child: FadeTransition(
@@ -61,7 +55,8 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                 Icon(
                   Icons.restaurant_menu,
                   size: screenHeight * 0.15,
-                  color: Colors.white,
+                  color: Colors.orangeAccent
+                  ,
                 ),
                 SizedBox(height: screenHeight * 0.02),
                 Text(
@@ -69,7 +64,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
                   style: TextStyle(
                     fontSize: screenHeight * 0.05,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: Colors.orangeAccent,
                   ),
                 ),
               ],

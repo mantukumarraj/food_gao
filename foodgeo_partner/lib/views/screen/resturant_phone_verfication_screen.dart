@@ -1,32 +1,93 @@
 import 'package:flutter/material.dart';
-import 'package:foodgeo_partner/views/screen/restaurant_register_screen.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:foodgeo_partner/views/screen/verfication_screen.dart';
+import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:intl_phone_field/phone_number.dart';
 import '../widget/costum_buttom.dart';
 import '../widget/costum_textfeld.dart';
 
-class RestaurantPhoneScreen extends StatefulWidget {
+class ResturantPhoneVerificationScreen extends StatefulWidget {
   @override
-  _RestaurantPhoneScreenState createState() => _RestaurantPhoneScreenState();
+  _ResturantPhoneVerificationScreenState createState() => _ResturantPhoneVerificationScreenState();
 }
 
-class _RestaurantPhoneScreenState extends State<RestaurantPhoneScreen> {
-  final TextEditingController phoneController = TextEditingController();
+class _ResturantPhoneVerificationScreenState extends State<ResturantPhoneVerificationScreen> {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
   final TextEditingController otpController = TextEditingController();
+  String verificationId = '';
   bool _isOtpSent = false;
+  bool _isLoading = false;  // Added for progress indication
+  PhoneNumber? number;
 
-  // Simulate sending OTP
   void _sendOtp() {
-    setState(() {
-      _isOtpSent = true;
-    });
+     // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => VerifyScreen()));
+    if (number != null) {
+      setState(() {
+        _isLoading = true;  // Show progress bar
+      });
+
+      _auth.verifyPhoneNumber(
+        phoneNumber: number!.completeNumber,
+        verificationCompleted: (PhoneAuthCredential credential) async {
+          await _auth.signInWithCredential(credential);
+        },
+        verificationFailed: (FirebaseAuthException e) {
+          setState(() {
+            _isLoading = false;  // Hide progress bar
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to send OTP: ${e.message}')),
+          );
+        },
+        codeSent: (String verificationId, int? resendToken) {
+          setState(() {
+            this.verificationId = verificationId;
+            _isOtpSent = true;
+            _isLoading = false;  // Hide progress bar
+          });
+        },
+        codeAutoRetrievalTimeout: (String verificationId) {},
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Please enter a valid phone number')),
+      );
+    }
   }
 
-  // Simulate OTP verification
-  void _verifyOtp() {
-    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>RestaurantRegistrationPage() ));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('OTP Verified!')),
-    );
+  void _verifyOtp() async {
+    setState(() {
+      _isLoading = true;  // Show progress bar
+    });
+
+    try {
+      final credential = PhoneAuthProvider.credential(
+        verificationId: verificationId,
+        smsCode: otpController.text,
+      );
+      await _auth.signInWithCredential(credential);
+
+      final user = _auth.currentUser;
+      if (user != null) {
+        await user.updateProfile(displayName: number!.completeNumber);
+      }
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => RestaurantVerificationScreen()),
+      );
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('OTP Verified! Phone number saved.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Failed to verify OTP: $e')),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;  // Hide progress bar
+      });
+    }
   }
 
   @override
@@ -72,42 +133,62 @@ class _RestaurantPhoneScreenState extends State<RestaurantPhoneScreen> {
                   topRight: Radius.circular(40),
                 ),
               ),
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05, vertical: screenHeight * 0.05),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (!_isOtpSent) ...[
-                        CustomTextField(
-                          labelText: "Phone Number",
-                          icon: Icons.phone,
-                          controller: phoneController,
-                        ),
-                        SizedBox(height: screenHeight * 0.03),
-                        CustomButton(
-                          text: "Send OTP",
-                          onPressed: _sendOtp,
-                          height: screenHeight * 0.07,
-                          width: screenWidth * 0.8,
-                        ),
-                      ] else ...[
-                        CustomTextField(
-                          labelText: "OTP",
-                          icon: Icons.lock,
-                          controller: otpController,
-                        ),
-                        SizedBox(height: screenHeight * 0.03),
-                        CustomButton(
-                          text: "Verify OTP",
-                          onPressed: _verifyOtp,
-                          height: screenHeight * 0.07,
-                          width: screenWidth * 0.8,
-                        ),
-                      ],
-                    ],
+              child: Stack(
+                children: [
+                  SingleChildScrollView(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05, vertical: screenHeight * 0.05),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (!_isOtpSent) ...[
+                            IntlPhoneField(
+                              decoration: InputDecoration(
+                                labelText: 'Phone Number',
+                                border: OutlineInputBorder(
+                                  borderSide: BorderSide(),
+                                ),
+                              ),
+                              initialCountryCode: 'IN',
+                              onChanged: (phone) {
+                                number = phone;
+                              },
+                            ),
+                            SizedBox(height: screenHeight * 0.03),
+                            CustomButton(
+                              text: "Send OTP",
+                              onPressed: _sendOtp,
+                              height: screenHeight * 0.07,
+                              width: screenWidth * 0.8,
+                            ),
+                          ] else ...[
+                            Center(
+                                child: CustomTextField(
+                                  labelText: "OTP",
+                                  icon: Icons.lock,
+                                  controller: otpController,
+                                )
+                            )
+                            ,
+                            SizedBox(height: screenHeight * 0.03),
+                            CustomButton(
+                              text: "Verify OTP",
+                              onPressed: _verifyOtp,
+                              height: screenHeight * 0.07,
+                              width: screenWidth * 0.8,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
                   ),
-                ),
+                  if (_isLoading)
+                    Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),

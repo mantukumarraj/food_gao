@@ -1,51 +1,44 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class PhoneAuthService {
+class FirebasePhoneService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<void> verifyPhoneNumber(String phoneNumber, Function(String) codeSentCallback, Function(String) verificationFailedCallback) async {
+  Future<void> sendOtp(String phoneNumber, Function(String) codeSent, Function(String) verificationFailed) async {
     await _auth.verifyPhoneNumber(
       phoneNumber: phoneNumber,
       verificationCompleted: (PhoneAuthCredential credential) async {
         await _auth.signInWithCredential(credential);
-        _addPhoneUserToFirestore(phoneNumber);
       },
       verificationFailed: (FirebaseAuthException e) {
-        verificationFailedCallback(e.message ?? 'Verification failed');
+        verificationFailed(e.message!);
       },
       codeSent: (String verificationId, int? resendToken) {
-        codeSentCallback(verificationId);
+        codeSent(verificationId);
       },
-      codeAutoRetrievalTimeout: (String verificationId) {
-        codeSentCallback(verificationId);
-      },
+      codeAutoRetrievalTimeout: (String verificationId) {},
     );
   }
 
-  // Sign in with phone number
-  Future<void> signInWithPhoneNumber(String verificationId, String smsCode) async {
-    PhoneAuthCredential credential = PhoneAuthProvider.credential(
-      verificationId: verificationId,
-      smsCode: smsCode,
-    );
-
-    await _auth.signInWithCredential(credential);
-    User? user = _auth.currentUser;
-    if (user != null) {
-      await _addPhoneUserToFirestore(user.phoneNumber);
+  Future<void> verifyOtp(String verificationId, String otp, Function() onSuccess, Function(String) onError) async {
+    try {
+      PhoneAuthCredential credential = PhoneAuthProvider.credential(
+        verificationId: verificationId,
+        smsCode: otp,
+      );
+      await _auth.signInWithCredential(credential);
+      onSuccess();
+    } catch (e) {
+      onError(e.toString());
     }
   }
 
-  // Add user to Firestore
-  Future<void> _addPhoneUserToFirestore(String? phoneNumber) async {
+  Future<void> savePhoneNumber(String phoneNumber) async {
     User? user = _auth.currentUser;
-    if (user != null && phoneNumber != null) {
+    if (user != null) {
       await _firestore.collection('users').doc(user.uid).set({
-        'phone_number': phoneNumber,
-        'provider': 'phone',
-        'uid': user.uid,
+        'phoneNumber': phoneNumber,
       });
     }
   }

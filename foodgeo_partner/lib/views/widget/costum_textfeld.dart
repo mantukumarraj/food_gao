@@ -23,7 +23,7 @@ class CustomTextField extends StatelessWidget {
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
-      keyboardType: labelText == "Phone Number" ? TextInputType.phone : TextInputType.text,
+      keyboardType: labelText == "Phone Number" ? TextInputType.text : TextInputType.text,
       validator: validator,
       decoration: InputDecoration(
         prefixIcon: Icon(icon, color: Colors.orange),

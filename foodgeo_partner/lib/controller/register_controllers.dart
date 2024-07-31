@@ -31,7 +31,7 @@ class RegistrationController {
         String uid = user.uid;
         String imageUrl = await _uploadImage(uid, image);
 
-        await _firestore.collection('users').doc(uid).set({
+        await _firestore.collection('Restaurant users').doc(uid).set({
           'name': name,
           'address': address,
           'email': email,
