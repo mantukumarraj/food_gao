@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:foodgeo_partner/views/screen/location.dart';
 import 'dart:async';
 
-import 'login_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -42,7 +41,6 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final screenHeight = mediaQuery.size.height;
-    final screenWidth = mediaQuery.size.width;
 
     return Scaffold(
       body: Container(
