@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:foodgeo_partner/views/screen/phone_verification_screen.dart';
 import 'package:foodgeo_partner/views/screen/resturant_phone_verfication_screen.dart';
 import 'dart:io';
 import '../../controller/restaurant_registration_controller.dart';
 import '../widget/costum_buttom.dart';
 import '../widget/costum_textfeld.dart';
 import '../widget/image_picker_widget.dart';
-import 'login_screen.dart';
 
 class RestaurantRegistrationPage extends StatefulWidget {
   @override
@@ -19,6 +17,16 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
   File? _selectedImage;
   bool _isLoading = false;
   String? _errorMessage;
+  String _selectedCategory = 'Fast Food';
+
+  final List<String> _categories = [
+    'Fast Food',
+    'Casual Dining',
+    'Fine Dining',
+    'Cafe',
+    'Buffet',
+    'Food Truck',
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -60,7 +68,7 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                     Text(
                       "Restaurant Registration",
                       style: TextStyle(
-                        fontSize: screenHeight * 0.04,
+                        fontSize: screenHeight * 0.03,
                         fontWeight: FontWeight.bold,
                         color: Color(0xFF424242),
                       ),
@@ -68,7 +76,9 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                     SizedBox(height: screenHeight * 0.02),
                     ImagePickerWidget(
                       onImagePicked: (image) {
-                        _selectedImage = image;
+                        setState(() {
+                          _selectedImage = image;
+                        });
                       },
                     ),
                     SizedBox(height: screenHeight * 0.03),
@@ -84,40 +94,54 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                       controller: _controller.addressController,
                     ),
                     SizedBox(height: screenHeight * 0.02),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        children: [
+                          Icon(Icons.person, size: screenHeight * 0.025, color: Colors.orange),
+                          SizedBox(width: screenWidth * 0.02), // Space between icon and label
+                          Text(
+                            "Gender",
+                            style: TextStyle(
+                              fontSize: screenHeight * 0.025,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Radio<String>(
-                                value: 'Male',
-                                groupValue: _selectedGender,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedGender = value!;
-                                  });
-                                },
-                              ),
-                              Text('Male'),
-                            ],
-                          ),
+                        Row(
+                          children: [
+                            Radio<String>(
+                              value: 'Male',
+                              groupValue: _selectedGender,
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedGender = value!;
+                                });
+                              },
+                            ),
+                            Text('Male'),
+                          ],
                         ),
-                        Expanded(
-                          child: Row(
-                            children: [
-                              Radio<String>(
-                                value: 'Female',
-                                groupValue: _selectedGender,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _selectedGender = value!;
-                                  });
-                                },
-                              ),
-                              Text('Female'),
-                            ],
-                          ),
+                        SizedBox(width: screenWidth * 0.05), // Space between options
+                        Row(
+                          children: [
+                            Radio<String>(
+                              value: 'Female',
+                              groupValue: _selectedGender,
+                              onChanged: (value) {
+                                setState(() {
+                                  _selectedGender = value!;
+                                });
+                              },
+                            ),
+                            Text('Female'),
+                          ],
                         ),
                       ],
                     ),
@@ -134,10 +158,25 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                       controller: _controller.locationController,
                     ),
                     SizedBox(height: screenHeight * 0.02),
-                    CustomTextField(
-                      labelText: "Description",
-                      icon: Icons.description,
-                      controller: _controller.descriptionController,
+                    DropdownButtonFormField<String>(
+                      decoration: InputDecoration(
+                        labelText: "Category",
+                        prefixIcon: Icon(Icons.category),
+                        border: OutlineInputBorder(),
+                      ),
+                      value: _selectedCategory,
+                      items: _categories.map((String category) {
+                        return DropdownMenuItem<String>(
+                          value: category,
+                          child: Text(category),
+                        );
+                      }).toList(),
+                      onChanged: (newValue) {
+                        setState(() {
+                          _selectedCategory = newValue!;
+                          _controller.category = newValue;  // Set the selected category in the controller
+                        });
+                      },
                     ),
                     SizedBox(height: screenHeight * 0.03),
                     if (_errorMessage != null)
@@ -180,19 +219,6 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                         height: screenHeight * 0.07,
                         width: screenWidth * 0.8,
                       ),
-                    SizedBox(height: screenHeight * 0.05),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginScreen()));
-                      },
-                      child: Text(
-                        "Already have an account? Sign in",
-                        style: TextStyle(
-                          color: Colors.grey,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -203,4 +229,3 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
     );
   }
 }
-

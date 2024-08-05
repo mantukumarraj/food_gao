@@ -46,4 +46,24 @@ class FirebaseServiceRestaurant {
       throw Exception('Restaurant registration failed: $e');
     }
   }
+
+  Future<List<Map<String, dynamic>>> getUserRestaurants() async {
+    final User? user = _auth.currentUser;
+    if (user == null) {
+      throw Exception('No user signed in');
+    }
+
+    try {
+      final querySnapshot = await _firestore
+          .collection('restaurants')
+          .where('userId', isEqualTo: user.uid)
+          .get();
+
+      return querySnapshot.docs
+          .map((doc) => doc.data() as Map<String, dynamic>)
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to fetch restaurants: $e');
+    }
+  }
 }

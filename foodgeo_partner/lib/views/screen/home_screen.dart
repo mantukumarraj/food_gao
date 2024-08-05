@@ -1,6 +1,9 @@
 import 'package:carousel_slider/carousel_slider.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:foodgeo_partner/views/screen/Profile.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:foodgeo_partner/views/screen/phone_verification_screen.dart';
 
 class HomePageScreen extends StatefulWidget {
   @override
@@ -11,6 +14,41 @@ class _HomePageScreenState extends State<HomePageScreen> {
   int _selectedIndex = 0;
   bool _isSearching = false;
   TextEditingController _searchController = TextEditingController();
+
+  String name = '';
+  String email = '';
+  String imageUrl = '';
+
+  @override
+  void initState() {
+    super.initState();
+    fetchCurrentUserData();
+  }
+
+  Future<void> fetchCurrentUserData() async {
+    User? user = FirebaseAuth.instance.currentUser;
+
+    if (user == null) {
+      return;
+    }
+
+    try {
+      DocumentSnapshot<Map<String, dynamic>> snapshot =
+      await FirebaseFirestore.instance.collection('users1').doc(user.uid).get();
+
+      if (snapshot.exists) {
+        Map<String, dynamic> data = snapshot.data()!;
+
+        setState(() {
+          name = data['userName'];
+          email = data['email'];
+          imageUrl = data['imageUrl'];
+        });
+      }
+    } catch (error) {
+      print('Error fetching user data: $error');
+    }
+  }
 
   void _onItemTapped(int index) {
     setState(() {
@@ -32,10 +70,10 @@ class _HomePageScreenState extends State<HomePageScreen> {
   }
 
   List<Widget> _pages = <Widget>[
-    RestaurantScreen(),
+    HomeScreen(),
     AddProductScreen(),
     OffersScreen(),
-
+    AccountScreen(),  // Added AccountScreen here
   ];
 
   @override
@@ -92,16 +130,14 @@ class _HomePageScreenState extends State<HomePageScreen> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: <Widget>[
-            DrawerHeader(
+            UserAccountsDrawerHeader(
+              accountName: Text(name),
+              accountEmail: Text(email),
+              currentAccountPicture:  CircleAvatar(
+        radius: 60,
+        backgroundImage: imageUrl.isNotEmpty ? NetworkImage(imageUrl) : null,    ),
               decoration: BoxDecoration(
                 color: Colors.red,
-              ),
-              child: Text(
-                'Menu',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                ),
               ),
             ),
             ListTile(
@@ -115,7 +151,10 @@ class _HomePageScreenState extends State<HomePageScreen> {
               leading: Icon(Icons.person),
               title: Text('Profile'),
               onTap: () {
-                Navigator.pop(context);
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => Profile()),
+                );
               },
             ),
             ListTile(
@@ -125,6 +164,39 @@ class _HomePageScreenState extends State<HomePageScreen> {
                 Navigator.pop(context);
               },
             ),
+            ListTile(
+              leading: Icon(Icons.logout),
+              title: Text("Logout"),
+              onTap: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return AlertDialog(
+                      title: Text("Logout"),
+                      content: Text("Are you sure you want to logout?"),
+                      actions: [
+                        TextButton(
+                          onPressed: () {
+                            // Close the alert dialog
+                            Navigator.of(context).pop();
+                          },
+                          child: Text("Cancel"),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            // Perform logout operation
+                            FirebaseAuth.instance.signOut();
+                            // Close the alert dialog
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => PhoneAuth(),));
+                          },
+                          child: Text("Logout"),
+                        ),
+                      ],
+                    );
+                  },
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -132,21 +204,23 @@ class _HomePageScreenState extends State<HomePageScreen> {
         index: _selectedIndex,
         children: _pages,
       ),
+
       bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.black,
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-              icon: Icon(Icons.restaurant, color: Colors.red), label: 'Home'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.add, color: Colors.red), label: 'AddProduct'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.local_offer, color: Colors.red), label: 'Offers'),
-          BottomNavigationBarItem(
-              icon: Icon(Icons.account_balance_wallet, color: Colors.red), label: 'Account'),
-        ],
+        backgroundColor: Colors.deepOrange,
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.red,
         onTap: _onItemTapped,
+        items: [
+          BottomNavigationBarItem(
+              icon: Icon(Icons.home, color: Colors.red), label: 'Home'),
+          BottomNavigationBarItem(
+          icon: Icon(Icons.add, color: Colors.red), label: 'AddProduct'
+
+    ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.restaurant),
+            label: "Add resturant",
+          ),
+        ],
       ),
     );
   }
@@ -161,7 +235,7 @@ class AddProductScreen extends StatelessWidget {
   }
 }
 
-class RestaurantScreen extends StatelessWidget {
+class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListView(
@@ -238,21 +312,37 @@ class RestaurantScreen extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.all(10.0),
           child: SizedBox(
-            height: 300, // Adjust this height based on your design
+            height: 300,
             child: GridView.count(
               crossAxisCount: 4,
               mainAxisSpacing: 16,
               crossAxisSpacing: 16,
               physics: NeverScrollableScrollPhysics(),
               children: [
-                CategoryIcon('Pizza', Icons.local_pizza, imageUrl: 'https://media.istockphoto.com/id/182148711/photo/pizza-from-the-top-deluxe.jpg?s=612x612&w=0&k=20&c=uI6keT3AMInUhQAq21IBHki2krITOzgMAKU9oeXjQns='),
-                CategoryIcon('Burger', Icons.fastfood, imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRP0HMuYpGWBZIGACw--0Mxku5WA9W5c-vG7g&s'),
-                CategoryIcon('Rolls', Icons.ramen_dining, imageUrl: 'https://w7.pngwing.com/pngs/917/998/png-transparent-plate-of-spring-rolls-spring-roll-indian-cuisine-vegetarian-cuisine-chaat-dosa-vegetable-food-recipe-cooking.png'),
-                CategoryIcon('Chinese', Icons.rice_bowl, imageUrl: 'https://static.vecteezy.com/system/resources/thumbnails/018/128/189/small_2x/schezwan-noodles-or-szechuan-vegetable-png.png'),
-                CategoryIcon('Home Cooked', Icons.kitchen, imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTrZPUb11YWHgnsuIZyEQMS0aaRTsXM6BqrTw&s.png'),
-                CategoryIcon('Chicken', Icons.dinner_dining, imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSjEIUD-_kuNHasATzAsNyRQzLPJnu2hI3X9g&s.png'),
-                CategoryIcon('Chaat', Icons.local_dining, imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSDHrtt9J710-Y21QNWtkCe7HmfF0obaLTuWw&s.png'),
-                CategoryIcon('Samosa', Icons.fastfood,imageUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQdRGNFbGVhOmYsXZ-GtnSIo7HLIyOup3w-zw&s')
+                CategoryIcon('Pizza', Icons.local_pizza,
+                    imageUrl:
+                    'https://media.istockphoto.com/id/182148711/photo/pizza-from-the-top-deluxe.jpg?s=612x612&w=0&k=20&c=uI6keT3AMInUhQAq21IBHki2krITOzgMAKU9oeXjQns='),
+                CategoryIcon('Burger', Icons.fastfood,
+                    imageUrl:
+                    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRP0HMuYpGWBZIGACw--0Mxku5WA9W5c-vG7g&s'),
+                CategoryIcon('Rolls', Icons.ramen_dining,
+                    imageUrl:
+                    'https://w7.pngwing.com/pngs/917/998/png-transparent-plate-of-spring-rolls-spring-roll-indian-cuisine-vegetarian-cuisine-chaat-dosa-vegetable-food-recipe-cooking.png'),
+                CategoryIcon('Chinese', Icons.rice_bowl,
+                    imageUrl:
+                    'https://static.vecteezy.com/system/resources/thumbnails/018/128/189/small_2x/schezwan-noodles-or-szechuan-vegetable-png.png'),
+                CategoryIcon('Home Cooked', Icons.kitchen,
+                    imageUrl:
+                    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTrZPUb11YWHgnsuIZyEQMS0aaRTsXM6BqrTw&s.png'),
+                CategoryIcon('Chicken', Icons.dinner_dining,
+                    imageUrl:
+                    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSjEIUD-_kuNHasATzAsNyRQzLPJnu2hI3X9g&s.png'),
+                CategoryIcon('Chaat', Icons.local_dining,
+                    imageUrl:
+                    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSDHrtt9J710-Y21QNWtkCe7HmfF0obaLTuWw&s.png'),
+                CategoryIcon('Samosa', Icons.fastfood,
+                    imageUrl:
+                    'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQdRGNFbGVhOmYsXZ-GtnSIo7HLIyOup3w-zw&s'),
               ],
             ),
           ),

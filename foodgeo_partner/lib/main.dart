@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:foodgeo_partner/views/home/home_screen.dart';
+import 'package:foodgeo_partner/views/screen/home_screen.dart';
+import 'package:foodgeo_partner/views/screen/splash_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,7 +18,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.orange),
         useMaterial3: true,
       ),
-      home: HomeScreen(),
+      home: SplashScreen(),
     );
   }
 }
