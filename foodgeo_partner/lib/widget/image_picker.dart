@@ -1,12 +1,12 @@
-
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
 class ImagePickerWidget extends StatefulWidget {
   final Function(File) onImagePicked;
+  final File? initialImage; // Optional parameter
 
-  ImagePickerWidget({required this.onImagePicked});
+  ImagePickerWidget({required this.onImagePicked, this.initialImage});
 
   @override
   _ImagePickerWidgetState createState() => _ImagePickerWidgetState();
@@ -16,13 +16,25 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
   File? _pickedImage;
   final ImagePicker _picker = ImagePicker();
 
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialImage != null) {
+      _pickedImage = widget.initialImage;
+    }
+  }
+
   Future<void> _pickImage(ImageSource source) async {
-    final pickedFile = await _picker.pickImage(source: source);
-    if (pickedFile != null) {
-      setState(() {
-        _pickedImage = File(pickedFile.path);
-      });
-      widget.onImagePicked(_pickedImage!);
+    try {
+      final pickedFile = await _picker.pickImage(source: source);
+      if (pickedFile != null) {
+        setState(() {
+          _pickedImage = File(pickedFile.path);
+        });
+        widget.onImagePicked(_pickedImage!);
+      }
+    } catch (e) {
+      print('Error picking image: $e');
     }
   }
 
@@ -34,6 +46,11 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
             ? CircleAvatar(
           radius: 60,
           backgroundImage: FileImage(_pickedImage!),
+          onBackgroundImageError: (_, __) {
+            setState(() {
+              _pickedImage = null; // Reset image on error
+            });
+          },
         )
             : CircleAvatar(
           radius: 60,
@@ -57,4 +74,3 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
     );
   }
 }
-

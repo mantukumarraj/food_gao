@@ -26,12 +26,12 @@ class CustomTextField extends StatelessWidget {
       keyboardType: labelText == "Phone Number" ? TextInputType.phone : TextInputType.text,
       validator: validator,
       decoration: InputDecoration(
-        prefixIcon: Icon(icon, color: Colors.orange),
+        prefixIcon: Icon(icon,color: Colors.black,),
         suffixIcon: suffixIcon,
         labelText: labelText,
         labelStyle: TextStyle(
           fontWeight: FontWeight.bold,
-          color: Colors.orange,
+          color: Colors.black,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),

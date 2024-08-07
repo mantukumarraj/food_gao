@@ -1,23 +1,51 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:foodgeo_partner/home_page.dart';
-import '../../controller/register_controllers.dart';
-import 'dart:io';
-
+import 'package:foodgeo_partner/controller/update_controller.dart'; // Ensure this controller handles updates
 import '../../widget/image_picker.dart';
 import '../widget/costum_buttom.dart';
 import '../widget/costum_textfeld.dart';
 
-class RegistrationPage extends StatefulWidget {
+class UpdatePage extends StatefulWidget {
   @override
-  _RegistrationPageState createState() => _RegistrationPageState();
+  _UpdatePageState createState() => _UpdatePageState();
 }
 
-class _RegistrationPageState extends State<RegistrationPage> {
-  final RegistrationController _controller = RegistrationController();
+class _UpdatePageState extends State<UpdatePage> {
+  final UpdateController _controller = UpdateController();
   String _selectedGender = 'Male';
   File? _selectedImage;
   bool _isLoading = false;
-  String? _errorMessage;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchCurrentUserData();
+  }
+
+  Future<void> _fetchCurrentUserData() async {
+    setState(() {
+      _isLoading = true;
+    });
+    try {
+      var userData = await _controller.getCurrentUserData();
+      setState(() {
+        _controller.nameController.text = userData['name'] ?? '';
+        _controller.addressController.text = userData['address'] ?? '';
+        _selectedGender = userData['gender'] ?? 'Male';
+        // Use the image URL to create a File object if needed
+        if (userData['imageUrl'] != null) {
+          _selectedImage = File(userData['imageUrl']);
+        }
+      });
+    } catch (e) {
+      // Handle errors if needed
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +85,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   children: [
                     SizedBox(height: screenHeight * 0.02),
                     Text(
-                      "Register",
+                      "Update Profile",
                       style: TextStyle(
                         fontSize: screenHeight * 0.04,
                         fontWeight: FontWeight.bold,
@@ -66,8 +94,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     ),
                     SizedBox(height: screenHeight * 0.02),
                     ImagePickerWidget(
+                      initialImage: _selectedImage, // Pass initial image
                       onImagePicked: (image) {
-                        _selectedImage = image;
+                        setState(() {
+                          _selectedImage = image;
+                        });
                       },
                     ),
                     SizedBox(height: screenHeight * 0.03),
@@ -122,37 +153,28 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     ),
                     SizedBox(height: screenHeight * 0.02),
 
-                    if (_errorMessage != null)
-                      Padding(
-                        padding: EdgeInsets.only(bottom: screenHeight * 0.02),
-                        child: Text(
-                          _errorMessage!,
-                          style: TextStyle(color: Colors.red),
-                        ),
-                      ),
                     if (_isLoading)
                       CircularProgressIndicator(),
                     if (!_isLoading)
                       CustomButton(
-                        text: "Register",
+                        text: "Update",
                         onPressed: () async {
                           setState(() {
                             _isLoading = true;
-                            _errorMessage = null;
                           });
                           try {
-                            if (_selectedImage == null) {
-                              throw Exception("Please select an image.");
-                            }
-                            await _controller.registerUser(_selectedGender, _selectedImage!);
+                            await _controller.updateUserProfile(
+                              _controller.nameController.text,
+                              _controller.addressController.text,
+                              _selectedGender,
+                              _selectedImage!,
+                            );
                             Navigator.pushReplacement(
                               context,
                               MaterialPageRoute(builder: (context) => HomePage()),
                             );
                           } catch (e) {
-                            setState(() {
-                              _errorMessage = e.toString();
-                            });
+                            // Handle errors if needed
                           } finally {
                             setState(() {
                               _isLoading = false;
@@ -165,11 +187,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     SizedBox(height: screenHeight * 0.05),
                     TextButton(
                       onPressed: () {
+                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage()));
                       },
                       child: Text(
-                        "Already have an account? Sign in",
+                        "Cancel",
                         style: TextStyle(
-                          color: Colors.grey,
+                          color: Colors.black,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -184,5 +207,3 @@ class _RegistrationPageState extends State<RegistrationPage> {
     );
   }
 }
-
-
