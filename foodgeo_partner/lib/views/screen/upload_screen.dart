@@ -4,7 +4,6 @@ import '../../services/add_product.dart';
 import '../widget/costum_buttom.dart';
 import '../widget/costum_textfeld.dart';
 import '../widget/image_picker_widget.dart';
-import 'resturant_phone_verfication_screen.dart';
 
 class AddProductScreen extends StatefulWidget {
   @override

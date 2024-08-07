@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 import '../controller/phone_controller.dart';
 
 class OTPView extends StatelessWidget {

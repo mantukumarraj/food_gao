@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:foodgeo_partner/views/screen/location.dart';
 import 'dart:async';
 
+import 'package:foodgeo_partner/views/screen/phone_verification_screen.dart';
+
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -27,7 +29,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     _controller.forward();
 
     Timer(Duration(seconds: 4), () {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => LocationScreen()));
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => PhoneVerificationScreen()));
     });
    }
 

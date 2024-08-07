@@ -10,5 +10,9 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Dart SDK" level="project" />
+<<<<<<< HEAD
+=======
+    <orderEntry type="library" name="Dart Packages" level="project" />
+>>>>>>> a15c0a786071f38718ec1a15c62bcd5f90e7ee9d
   </component>
 </module>
