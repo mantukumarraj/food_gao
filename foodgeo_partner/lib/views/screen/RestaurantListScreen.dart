@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:foodgeo_partner/product/product_add.dart';
 import '../../controller/restaurant_registration_controller.dart';
-import '../../product/product_add.dart';
+import '../../product/product_list_screen.dart';
 
 class RestaurantListScreen extends StatefulWidget {
   @override
@@ -18,9 +19,21 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
   }
 
   void _navigateToAddProduct(BuildContext context, String restaurantId) {
-    // Implement navigation logic to Add Product screen here
-    // Pass restaurantId to the Add Product screen
-    // Navigator.push(context, MaterialPageRoute(builder: (context) => AddProductScreen(restaurantId: restaurantId)));
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProductAdd(restaurantId: restaurantId),
+      ),
+    );
+  }
+
+  void _navigateToProductList(BuildContext context, String restaurantId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProductListScreen(restaurantId: restaurantId),
+      ),
+    );
   }
 
   @override
@@ -31,9 +44,6 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
     final double imageHeight = screenHeight * 0.25; // 25% of screen height
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Your Restaurants'),
-      ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _restaurantsFuture,
         builder: (context, snapshot) {
@@ -45,65 +55,97 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
             return Center(child: Text('No restaurants found.'));
           } else {
             List<Map<String, dynamic>> restaurants = snapshot.data!;
-            return ListView.builder(
+            return PageView.builder(
               itemCount: restaurants.length,
               itemBuilder: (context, index) {
                 final restaurant = restaurants[index];
-                return Card(
-                  margin: EdgeInsets.symmetric(vertical: 8, horizontal: screenWidth * 0.05),
-                  elevation: 4,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Image section
-                      restaurant['imageUrl'] != null
-                          ? Image.network(
-                        restaurant['imageUrl'],
-                        width: double.infinity,
-                        height: imageHeight,
-                        fit: BoxFit.fill,
-                      )
-                          : Container(
-                        width: double.infinity,
-                        height: imageHeight,
-                        color: Colors.grey[200],
-                        child: Icon(Icons.restaurant, size: imageHeight * 0.5, color: Colors.grey[600]),
-                      ),
-                      // Text details section
-                      Padding(
-                        padding: EdgeInsets.all(screenWidth * 0.04),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                return Container(
+                  width: screenWidth,
+                  margin: EdgeInsets.symmetric(horizontal: screenWidth * 0.02, vertical: screenHeight * 0.06),
+                  child: Card(
+                    elevation: 10,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: ListView(
+                      padding: EdgeInsets.all(screenWidth * 0.03),
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                          child: restaurant['imageUrl'] != null
+                              ? Image.network(
+                            restaurant['imageUrl'],
+                            width: double.infinity,
+                            height: imageHeight,
+                            fit: BoxFit.cover,
+                          )
+                              : Container(
+                            width: double.infinity,
+                            height: imageHeight,
+                            color: Colors.grey[200],
+                            child: Icon(Icons.restaurant, size: imageHeight * 0.5, color: Colors.grey[600]),
+                          ),
+                        ),
+                        SizedBox(height: screenHeight * 0.02),
+                        Text(
+                          'Restaurant Name: ${restaurant['name'] ?? 'No restaurant name'}',
+                          style: TextStyle(
+                            fontSize: screenWidth * 0.05,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        SizedBox(height: screenHeight * 0.01),
+                        Text(
+                          'Owner: ${restaurant['ownerName'] ?? 'No owner'}',
+                          style: TextStyle(
+                            fontSize: screenWidth * 0.05,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        Text('Address: ${restaurant['address'] ?? 'No address'}'),
+                        Text('Location: ${restaurant['location'] ?? 'No location'}'),
+                        Text('Category: ${restaurant['category'] ?? 'No category'}'),
+                        Text('Gender: ${restaurant['gender'] ?? 'No gender'}'),
+                        Text('Verification: ${restaurant['verification'] ?? 'No verification'}'),
+                        SizedBox(height: screenHeight * 0.02),
+                        Column(
                           children: [
-                            Text(
-                              'Restaurant Name: ${restaurant['name'] ?? 'No restaurant name'}',
-                              style: TextStyle(fontSize: screenWidth * 0.05, fontWeight: FontWeight.bold),
-                            ),
-                            SizedBox(height: screenHeight * 0.01),
-                            Text('Address: ${restaurant['address'] ?? 'No address'}'),
-                            Text('Location: ${restaurant['location'] ?? 'No location'}'),
-                            Text('Category: ${restaurant['category'] ?? 'No category'}'),
-                            Text('Owner: ${restaurant['ownerName'] ?? 'No owner'}'),
-                            Text('Gender: ${restaurant['gender'] ?? 'No gender'}'),
-                            Text('Verification: ${restaurant['verification'] ?? 'No verification'}'),
-                            SizedBox(height: screenHeight * 0.01),
                             Container(
                               width: double.infinity,
                               height: 45,
-                              margin: EdgeInsets.symmetric(horizontal: 18),
                               child: MaterialButton(
-                                onPressed: () {
-                                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProductAdd(),));
-                                },
+                                onPressed: () => _navigateToAddProduct(context, restaurant['id']),
                                 color: Colors.orange,
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(8.0),
                                 ),
                                 child: Text(
-                                  'Product Add',
+                                  'Add Product',
                                   style: TextStyle(
                                     color: Colors.white,
-                                    fontSize: 15,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            SizedBox(height: screenHeight * 0.02),
+                            Container(
+                              width: double.infinity,
+                              height: 45,
+                              child: MaterialButton(
+                                onPressed: () => _navigateToProductList(context, restaurant['id']),
+                                color: Colors.orange,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(8.0),
+                                ),
+                                child: Text(
+                                  'Show Products',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
@@ -111,8 +153,8 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                             ),
                           ],
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 );
               },

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:uuid/uuid.dart';
 
 class RegisterControllers {
   final TextEditingController nameController = TextEditingController();
@@ -10,7 +11,7 @@ class RegisterControllers {
   final TextEditingController ownerNameController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
 
-  String category = '';  // Use a variable to hold the category
+  String category = ''; // Use a variable to hold the category
 
   Future<void> registerUser(String gender, File image) async {
     try {
@@ -19,8 +20,11 @@ class RegisterControllers {
         throw Exception("No user logged in.");
       }
 
-      // Upload image to Firebase Storage
-      String imageUrl = await _uploadImage(user.uid, image);
+      // Generate a unique UUID for the restaurant
+      final String restaurantId = Uuid().v4();
+
+      // Upload image to Firebase Storage with a unique name
+      String imageUrl = await _uploadImage(restaurantId, image);
 
       // Save restaurant data to Firestore
       final userData = {
@@ -31,21 +35,28 @@ class RegisterControllers {
         'location': locationController.text,
         'category': category, // Use category variable
         'imageUrl': imageUrl,
-        "restaurantid": user.uid, // Change from 'restaurant id' to 'restaurantid' for consistency
+        'restaurantid': restaurantId, // Store the generated restaurant ID
         'verification': false,
+        'userId': user.uid, // Store the user ID associated with the restaurant
       };
 
       await FirebaseFirestore.instance
           .collection('restaurants')
-          .add(userData); // Use add() to create a new document with an auto-generated ID
+          .doc(restaurantId) // Use the generated restaurant ID as the document ID
+          .set(userData); // Use set() to create a new document with the specified ID
     } catch (e) {
       throw Exception("Failed to register user: ${e.toString()}");
     }
   }
 
-  Future<String> _uploadImage(String userId, File image) async {
+  Future<String> _uploadImage(String restaurantId, File image) async {
     try {
-      final ref = FirebaseStorage.instance.ref().child('restaurant_images').child('$userId.jpg');
+      // Use the restaurantId in the file name to ensure each image is stored separately
+      final ref = FirebaseStorage.instance
+          .ref()
+          .child('restaurant_images')
+          .child('$restaurantId.jpg');
+
       await ref.putFile(image);
       return await ref.getDownloadURL();
     } catch (e) {
@@ -61,7 +72,7 @@ class RegisterControllers {
 
     final querySnapshot = await FirebaseFirestore.instance
         .collection('restaurants')
-        .where('restaurantid', isEqualTo: user.uid) // Filter based on user ID
+        .where('userId', isEqualTo: user.uid) // Filter based on user ID
         .get();
 
     final restaurants = querySnapshot.docs.map((doc) => {

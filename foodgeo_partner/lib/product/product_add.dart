@@ -6,7 +6,9 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProductAdd extends StatefulWidget {
-  const ProductAdd({Key? key}) : super(key: key);
+  final String restaurantId; // Accept restaurantId as a parameter
+
+  const ProductAdd({Key? key, required this.restaurantId}) : super(key: key);
 
   @override
   _ProductAddState createState() => _ProductAddState();
@@ -86,12 +88,13 @@ class _ProductAddState extends State<ProductAdd> {
       'price': price,
       'quantity': quantity,
       'image': downloadUrl.toString(),
+      'restaurantId': widget.restaurantId, // Include restaurantId in product data
     };
 
     // Store product data in Firestore
     DocumentReference productRef = await FirebaseFirestore.instance.collection('products').add(productData);
     String productId = productRef.id; // Get the ID of the newly added product
-    productData['id'] = productId; // Add the ID to the product data
+    productData['product_Id'] = productId; // Add the product ID to the product data
 
     // Update product data in Firestore with the ID
     await productRef.update(productData);
@@ -100,7 +103,7 @@ class _ProductAddState extends State<ProductAdd> {
 
     // Check if all fields are filled and image is uploaded successfully
     if (_imageFile != null && !_nameController.text.isEmpty && !_descriptionController.text.isEmpty && !_priceController.text.isEmpty && !_quantityController.text.isEmpty) {
-      // Navigate to ProductList screen
+      // Navigate to HomePage or any other screen
       Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage()));
     }
   }
@@ -109,11 +112,20 @@ class _ProductAddState extends State<ProductAdd> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Product Upload',
-          textAlign: TextAlign.center,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.orange, Colors.deepOrange],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
         ),
-        centerTitle: true,
+        title: Text("Product Add",textAlign: TextAlign.center,style: TextStyle(color: Colors.white),
+        ),
+        iconTheme: IconThemeData(
+          color: Colors.white, // Change the back icon color to white
+        ),
       ),
       body: SingleChildScrollView(
         child: Padding(
@@ -204,11 +216,26 @@ class _ProductAddState extends State<ProductAdd> {
                 keyboardType: TextInputType.number,
               ),
               SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () async {
-                  await _uploadImage();
-                },
-                child: Text('Add Product'),
+              Container(
+                width: double.infinity,
+                height: 45,
+                child: MaterialButton(
+                  onPressed: () async {
+                    await _uploadImage();
+                  },
+                  color: Colors.orange,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  child: Text(
+                    'Add Product',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
               ),
             ],
           ),

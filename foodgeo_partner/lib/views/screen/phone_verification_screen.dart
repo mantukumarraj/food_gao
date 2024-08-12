@@ -26,7 +26,7 @@ class _PhoneAuthState extends State<PhoneAuth> {
       verificationCompleted: (PhoneAuthCredential credential) async {
         await _auth.signInWithCredential(credential);
         setState(() {
-          isLoading = false;
+          isLoading = true;
         });
         // Navigate to Home Page on successful authentication
       },
@@ -72,6 +72,10 @@ class _PhoneAuthState extends State<PhoneAuth> {
     final safeAreaHeight = height - padding.top - padding.bottom;
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text(''),
+        backgroundColor: Colors.orange,
+      ),
       backgroundColor: Colors.white,
       body: Padding(
         padding: EdgeInsets.symmetric(horizontal: width * 0.05),
@@ -81,9 +85,10 @@ class _PhoneAuthState extends State<PhoneAuth> {
             children: [
               SizedBox(height: safeAreaHeight * 0.1),
               Container(
-                width: double.infinity,
-                padding: EdgeInsets.all(16.0),
-                color: Colors.white30,
+                width: width * 1.0,
+                height: height * 0.3,
+                padding: EdgeInsets.all(18.0),
+                color: Colors.black, // Set the background color to black
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -118,7 +123,7 @@ class _PhoneAuthState extends State<PhoneAuth> {
                   ],
                 ),
               ),
-              SizedBox(height: safeAreaHeight * 0.03),
+              SizedBox(height: safeAreaHeight * 0.07),
               IntlPhoneField(
                 decoration: InputDecoration(
                   labelText: 'Phone Number',

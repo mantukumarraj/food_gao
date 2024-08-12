@@ -1,12 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:foodgeo_partner/views/screen/home_screen.dart';
 import 'dart:developer';
 import 'dart:async';
 import 'package:foodgeo_partner/views/screen/register_screen.dart';
-import 'package:pinput/pinput.dart';
-import '../../home_page.dart';
+import 'package:pinput/pinput.dart'; // Import the pinput package
+import 'home_page.dart';
 
 class Verify extends StatefulWidget {
   final String verificationid;
@@ -22,7 +21,6 @@ class _VerifyState extends State<Verify> {
   TextEditingController OtpController = TextEditingController();
   int resendCountdown = 30;
   late Timer _timer;
-  bool isButtonEnabled = true;
 
   @override
   void initState() {
@@ -45,9 +43,6 @@ class _VerifyState extends State<Verify> {
         });
       } else {
         timer.cancel();
-        setState(() {
-          isButtonEnabled = false;
-        });
       }
     });
   }
@@ -55,19 +50,16 @@ class _VerifyState extends State<Verify> {
   Future<void> checkRegistrationStatus() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
-      // Check if the user is signed in with phone authentication
       bool isPhoneAuthUser = user.providerData.any((provider) => provider.providerId == 'phone');
       if (isPhoneAuthUser) {
-        // If the user is signed in with phone authentication, navigate to the home page
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => HomePage(title: 'home',)),
+          MaterialPageRoute(builder: (context) => HomePage()),
         );
       } else {
-        // If the user is not signed in with phone authentication, navigate to the register page
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => RegistrationPage()),
+          MaterialPageRoute(builder: (context) => RegistrationPage(phoneNumber: widget.phoneNumber,)),
         );
       }
     }
@@ -76,7 +68,7 @@ class _VerifyState extends State<Verify> {
   Future<bool> registerUser(String userId) async {
     try {
       DocumentSnapshot<Map<String, dynamic>> snapshot =
-      await FirebaseFirestore.instance.collection('users1').doc(userId).get();
+      await FirebaseFirestore.instance.collection('users').doc(userId).get();
       return snapshot.exists;
     } catch (error) {
       print('Error checking user registration: $error');
@@ -96,11 +88,9 @@ class _VerifyState extends State<Verify> {
       bool isRegistered = await registerUser(userCredential.user!.uid);
 
       if (isRegistered) {
-        // If the user is registered, navigate to the home page
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(title: 'home',)));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage()));
       } else {
-        // If the user is not registered, navigate to the registration page
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => RegistrationPage()));
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => RegistrationPage(phoneNumber: widget.phoneNumber,)));
       }
     } catch (ex) {
       log(ex.toString());
@@ -113,44 +103,70 @@ class _VerifyState extends State<Verify> {
       width: 56,
       height: 56,
       textStyle: TextStyle(
-          fontSize: 20,
-          color: Color.fromRGBO(30, 60, 87, 1),
-          fontWeight: FontWeight.w600),
+        fontSize: 20,
+        color: Color.fromRGBO(30, 60, 87, 1),
+        fontWeight: FontWeight.w600,
+      ),
       decoration: BoxDecoration(
         border: Border.all(color: Color.fromRGBO(234, 239, 243, 1)),
         borderRadius: BorderRadius.circular(20),
       ),
     );
 
+    final mediaQuery = MediaQuery.of(context);
+    final height = mediaQuery.size.height;
+    final width = mediaQuery.size.width;
+    final padding = mediaQuery.padding;
+    final safeAreaHeight = height - padding.top - padding.bottom;
+
     return Scaffold(
-      body: Container(
-        margin: EdgeInsets.only(left: 25, right: 25),
-        alignment: Alignment.center,
+      appBar: AppBar(
+        title: Text('OTP Verification'),
+        backgroundColor: Colors.orange,
+      ),
+      backgroundColor: Colors.white,
+      body: Padding(
+        padding: EdgeInsets.symmetric(horizontal: width * 0.05),
         child: SingleChildScrollView(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.network("https://media.istockphoto.com/id/1221578901/vector/2fa-authentication-password-secure-notice-login-verification-or-sms-with-push-code-message.jpg?s=612x612&w=0&k=20&c=zganV8pxvPCp2aNZG6uDHL_qStrXerKneEcWRFxkVQA="),
-              SizedBox(
-                height: 25,
+              SizedBox(height: safeAreaHeight * 0.1),
+              Container(
+                width: width * 1.0,
+                height: height * 0.3,
+                padding: EdgeInsets.all(18.0),
+                color: Colors.black,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "Verify Your Phone Number",
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.orange,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    SizedBox(height: safeAreaHeight * 0.01),
+                    Text(
+                      'We have sent a verification code to ${widget.phoneNumber}',
+                      style: TextStyle(color: Colors.grey),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
-              Text(
-                'We have sent a verification code to ${widget.phoneNumber}',
-                style: TextStyle(color: Colors.black),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(
-                height: 10,
-              ),
+              SizedBox(height: safeAreaHeight * 0.07),
               Pinput(
                 length: 6,
                 showCursor: true,
                 onCompleted: (pin) => verifyOtp(pin),
                 controller: OtpController,
+                defaultPinTheme: defaultPinTheme,
               ),
-              SizedBox(
-                height: 20,
-              ),
+              SizedBox(height: 20),
               Text(
                 'Resend code in $resendCountdown seconds',
                 style: TextStyle(
@@ -159,19 +175,23 @@ class _VerifyState extends State<Verify> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(
-                height: 20,
-              ),
-              SizedBox(
+              SizedBox(height: 20),
+
+              Container(
                 width: double.infinity,
-                height: 45,
-                child: ElevatedButton(
-                  onPressed: isButtonEnabled
-                      ? () async {
+                height: 42,
+                child: MaterialButton(
+                  onPressed: () {
                     verifyOtp(OtpController.text.toString());
-                  }
-                      : null,
-                  child: Text('VERIFY OTP'),
+                  },
+                  color: Colors.orange,
+                  child: Text(
+                    'VERIFY OTP',
+                    style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold),
+                  ),
                 ),
               ),
             ],
