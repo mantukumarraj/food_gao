@@ -132,7 +132,7 @@ class _DrawerWState extends State<DrawerW> {
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (context) => RestaurantRegistrationPage()));
+                      builder: (context) => RestaurantRegistrationPage(),),);
             },
           ),
           if (isVerified) // Show Add Product option if verified
@@ -157,8 +157,8 @@ class _DrawerWState extends State<DrawerW> {
             leading: Icon(Icons.person, color: Colors.orange),
             title: Text('Profile'),
             onTap: () {
-              Navigator.push(context,
-                  MaterialPageRoute(builder: (context) => ProfilePage()));
+              // Navigator.push(context,
+              //     MaterialPageRoute(builder: (context) => ProfilePage()));
             },
           ),
           ListTile(
@@ -196,7 +196,7 @@ class _DrawerWState extends State<DrawerW> {
                                     Navigator.pushReplacement(
                                         context,
                                         MaterialPageRoute(
-                                            builder: (context) => PhoneAuth()));
+                                            builder: (context) => PhoneAuthView()));
                                     ScaffoldMessenger.of(context).showSnackBar(
                                         SnackBar(
                                             content:

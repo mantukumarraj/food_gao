@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
+import 'package:foodgeo_partner/product/product_list_screen.dart';
 import 'package:foodgeo_partner/views/screen/RestaurantListScreen.dart';
-import 'package:foodgeo_partner/views/widget/drawer_widget.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'Profile.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 
+import '../../product/edit_product_screen.dart';
+import 'Profile.dart';
+import 'order_screen.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -15,45 +18,49 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   User? _currentUser;
-  String? _userName;
-  String? _userImageUrl;
+  List<Map<String, dynamic>> _restaurants = [];
   List<Map<String, dynamic>> _products = [];
   List<Map<String, dynamic>> _filteredProducts = [];
   String _searchText = '';
   int _selectedIndex = 0;
+  bool _showAllProducts = false; // Add this flag
 
   @override
   void initState() {
     super.initState();
     _currentUser = FirebaseAuth.instance.currentUser;
-    _fetchUserData();
+    _fetchRestaurants();
     _fetchProducts();
   }
 
-  Future<void> _fetchUserData() async {
-    if (_currentUser != null) {
-      try {
-        DocumentSnapshot userDoc = await FirebaseFirestore.instance
-            .collection('users')
-            .doc(_currentUser!.uid)
-            .get();
+  Future<void> _fetchRestaurants() async {
+    try {
+      String currentUserId = _currentUser?.uid ?? '';
 
-        if (userDoc.exists) {
-          setState(() {
-            _userName = userDoc['name'];
-            _userImageUrl = userDoc['imageUrl'];
-          });
-        }
-      } catch (e) {
-        print('Error fetching user data: $e');
-      }
+      QuerySnapshot restaurantDocs = await FirebaseFirestore.instance
+          .collection('restaurants')
+          .where('userId', isEqualTo: currentUserId)
+          .get();
+
+      List<Map<String, dynamic>> restaurants = restaurantDocs.docs
+          .map((doc) => doc.data() as Map<String, dynamic>)
+          .toList();
+
+      setState(() {
+        _restaurants = restaurants;
+      });
+    } catch (e) {
+      print('Error fetching restaurants: $e');
     }
   }
 
   Future<void> _fetchProducts() async {
     try {
+      String currentUserId = _currentUser?.uid ?? '';
+
       QuerySnapshot productDocs = await FirebaseFirestore.instance
           .collection('products')
+          .where('userId', isEqualTo: currentUserId)
           .get();
 
       List<Map<String, dynamic>> products = productDocs.docs
@@ -84,250 +91,290 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void _navigateToProductList(BuildContext context, String restaurantId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProductListScreen(restaurantId: restaurantId),
+      ),
+    );
+  }
+
+  Future<void> _refreshProducts() async {
+    setState(() {
+      _fetchProducts();
+    });
+  }
+
+  void _toggleShowAllProducts() {
+    setState(() {
+      _showAllProducts = !_showAllProducts;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<Widget> _pages = [
       _buildHomePageContent(),
       RestaurantListScreen(),
-
+      OrdersScreen(),
+      ProfileScreen()
     ];
-
     return Scaffold(
-      drawer: DrawerW(),
-      appBar: AppBar(
-        iconTheme: IconThemeData(color: Colors.white),
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.orange, Colors.deepOrange],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-        actions: [
-          GestureDetector(
-            child: CircleAvatar(
-              backgroundImage: _userImageUrl != null
-                  ? NetworkImage(_userImageUrl!)
-                  : AssetImage('assets/default_avatar.png') as ImageProvider,
-              backgroundColor: Colors.white,
-              radius: 20,
-            ),
-            onTap: () {
-              Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (context) => ProfilePage()));
-            },
-          ),
-          SizedBox(width: 16),
-        ],
-        title: Center(
-          child: Text(
-            _userName ?? "Guest User",
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-
-          ),
-
-        ),
-      ),
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: BottomNavigationBar(
-        items: const <BottomNavigationBarItem>[
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.restaurant),
-            label: 'Your Restaurants',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.history),
-            label: 'History',
-          ),
-        ],
-        currentIndex: _selectedIndex,
-        selectedItemColor: Colors.orange,
-        onTap: _onItemTapped,
-      ),
-    );
-  }
-
-  Widget _buildHomePageContent() {
-    return Column(
-      children: [
-        Container(
-          padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 5.0),
-          margin: EdgeInsets.all(10.0),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(25.0),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.5),
-                spreadRadius: 2,
-                blurRadius: 5,
-                offset: Offset(0, 3),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.search, color: Colors.black),
-              Expanded(
-                child: TextField(
-                  onChanged: (value) {
-                    setState(() {
-                      _searchText = value;
-                      _filterProducts();
-                    });
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'Search...',
-                    border: InputBorder.none,
-                  ),
+      appBar: _selectedIndex == 0
+          ? AppBar(
+              title: Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 0.0),
+                margin: EdgeInsets.all(5.0),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(30.0),
                 ),
-              ),
-            ],
-          ),
-        ),
-        Expanded(
-          child: GridView.builder(
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2, // Number of columns
-              crossAxisSpacing: 15, // Spacing between columns
-              mainAxisSpacing: 15, // Spacing between rows
-              childAspectRatio: 0.75, // Aspect ratio for slightly taller cards
-            ),
-            itemCount: _filteredProducts.length,
-            itemBuilder: (context, index) {
-              final product = _filteredProducts[index];
-              final mediaQuery = MediaQuery.of(context);
-              final heightFactor = mediaQuery.size.height / 800;
-
-              return GestureDetector(
-                onTap: () {
-                  // Handle onTap interaction here (e.g., navigate to product details)
-                },
-                child: Stack(
-                  alignment: Alignment.center,
+                child: Row(
                   children: [
-                    Positioned(
-                      bottom: 20 * heightFactor,
-                      child: Container(
-                        height: 250 * heightFactor,
-                        width: 180 * mediaQuery.size.width / 400,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(20.0),
-                          gradient: LinearGradient(
-                            colors: [
-                              Color(0xFFa8edea),
-                              Color(0xFFfed6e3)
-                            ], // Soft pastel gradient
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black12,
-                              offset: Offset(0, 8),
-                              blurRadius: 15,
-                            ),
-                          ],
-                        ),
-                        child: Padding(
-                          padding: EdgeInsets.symmetric(
-                            vertical: 2 * heightFactor,
-                            horizontal:
-                            15 * mediaQuery.size.width / 400,
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            crossAxisAlignment:
-                            CrossAxisAlignment.center,
-                            children: [
-                              SizedBox(
-                                  height: 80 *
-                                      heightFactor), // Reduced space for the floating image
-                              Text(
-                                product['name'],
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize:
-                                  18 * heightFactor,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                              SizedBox(
-                                  height: 5 *
-                                      heightFactor),
-                              Text(
-                                product['description'],
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  color: Colors.black54,
-                                  fontSize: 14 *
-                                      heightFactor,
-                                ),
-                                maxLines: 2,
-                                overflow:
-                                TextOverflow.ellipsis,
-                              ),
-                              SizedBox(
-                                  height: 10 *
-                                      heightFactor),
-                              Text(
-                                '\$${product['price']}',
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontWeight:
-                                  FontWeight.bold,
-                                  fontSize: 18 *
-                                      heightFactor,
-                                  color: Color(0xFFFF8C00), // Bright orange for price
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
+                    Icon(Icons.search, color: Colors.black),
+                    const SizedBox(
+                      width: 20,
                     ),
-                    // Floating Image at the top
-                    Positioned(
-                      top: 10 * heightFactor, // Adjust position to avoid overlapping
-                      child: Container(
-                        width: 120 * heightFactor, // Reduced size for better alignment
-                        height: 120 * heightFactor,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black26,
-                              offset: Offset(0, 8),
-                              blurRadius: 15,
-                            ),
-                          ],
-                        ),
-                        child: ClipOval(
-                          child: Image.network(
-                            product['image'],
-                            fit: BoxFit.cover,
-                          ),
+                    Expanded(
+                      child: TextField(
+                        onChanged: (value) {
+                          setState(() {
+                            _searchText = value;
+                            _filterProducts();
+                          });
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Search...',
+                          border: InputBorder.none,
                         ),
                       ),
                     ),
                   ],
                 ),
-              );
-            },
+              ),
+            )
+          : null, // App bar only on the home page
+      body: _pages[_selectedIndex],
+      bottomNavigationBar: BottomNavigationBar(
+        type: BottomNavigationBarType.fixed,
+        // Ensures all icons are always shown
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+            icon: Icon(Icons.home),
+            label: '', // No label
           ),
-        ),
-      ],
+          BottomNavigationBarItem(
+            icon: Icon(Icons.restaurant),
+            label: '', // No label
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.outbox),
+            label: '', // No label
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.person),
+            label: '', // No label
+          ),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.orange,
+        onTap: _onItemTapped,
+        showSelectedLabels: false,
+        // Hide label for selected item
+        showUnselectedLabels: false, // Hide label for unselected items
+      ),
+    );
+  }
+
+  Widget _buildHomePageContent() {
+    return SingleChildScrollView(
+      child: Column(
+        children: [
+          if (_restaurants.isNotEmpty) ...[
+            SizedBox(height: 10.0),
+            CarouselSlider(
+              options: CarouselOptions(
+                height: 200.0,
+                autoPlay: true,
+                viewportFraction: 1.0,
+                autoPlayInterval: Duration(seconds: 3),
+                autoPlayAnimationDuration: Duration(milliseconds: 800),
+                autoPlayCurve: Curves.fastOutSlowIn,
+              ),
+              items: _restaurants.map((restaurant) {
+                return Builder(
+                  builder: (BuildContext context) {
+                    return Container(
+                      width: MediaQuery.of(context).size.width,
+                      margin: EdgeInsets.symmetric(horizontal: 5.0),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10.0),
+                        image: DecorationImage(
+                          image: NetworkImage(restaurant['imageUrl']),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      child: Align(
+                        alignment: Alignment.bottomCenter,
+                        child: Container(
+                          width: double.infinity,
+                          padding: EdgeInsets.all(8.0),
+                          decoration: BoxDecoration(
+                            color: Colors.black54,
+                            borderRadius: BorderRadius.only(
+                              bottomLeft: Radius.circular(7.0),
+                              bottomRight: Radius.circular(7.0),
+                            ),
+                          ),
+                          child: Text(
+                            'Restaurant Name: ${restaurant['name']}',
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              }).toList(),
+            ),
+          ] else ...[
+            SizedBox(height: 20.0),
+            Center(
+              child: Text(
+                'No restaurants found',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
+            ),
+          ],
+          SizedBox(height: 20),
+          Row(
+            children: [
+              Padding(
+                padding: EdgeInsets.only(left: 10.0),
+                // Left side se padding add karna
+                child: Text(
+                  'Recommmended for you',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+              ),
+              Spacer(),
+              Padding(
+                padding: EdgeInsets.only(right: 16.0),
+                // Right side se padding add karna
+                child: GestureDetector(
+                  onTap: _toggleShowAllProducts, // Add this
+                  child: Text(
+                    _showAllProducts ? 'See Less' : 'See More', // Toggle text
+                    style: TextStyle(fontSize: 14, color: Colors.blue),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          SizedBox(
+            height: 20,
+          ),
+          if (_filteredProducts.isEmpty) ...[
+            Center(child: Text('No products found.'))
+          ] else ...[
+            GridView.builder(
+              physics: NeverScrollableScrollPhysics(),
+              shrinkWrap: true,
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 2,
+                crossAxisSpacing: 8,
+                mainAxisSpacing: 10,
+                childAspectRatio: 0.70,
+              ),
+              itemCount: _showAllProducts
+                  ? _filteredProducts.length
+                  : (_filteredProducts.length > 4
+                      ? 4
+                      : _filteredProducts.length),
+              itemBuilder: (context, index) {
+                final product = _filteredProducts[index];
+
+                return GestureDetector(
+                  child: Card(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    elevation: 4,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(8.0),
+                          child: CircleAvatar(
+                            radius: 50,
+                            backgroundImage: product['image'] != null
+                                ? NetworkImage(product['image'])
+                                : null,
+                            child: product['image'] == null
+                                ? Icon(Icons.fastfood, size: 50)
+                                : null,
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Name: ${product['name'] ?? 'No product name'}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              SizedBox(height: 4),
+                              Text(
+                                'Des: ${product['description'] ?? 'No product description'}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              Text(
+                                'Items: ${product['items'] ?? 'No product items'}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                'Price: ₹${product['price']}',
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                  color: Colors.orange,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

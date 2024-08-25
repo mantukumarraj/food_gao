@@ -4,32 +4,53 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'home_page.dart'; // Adjust the path as needed
 
-class RegistrationPage extends StatefulWidget {
-  final String phoneNumber;
-
-  const RegistrationPage({Key? key, required this.phoneNumber}) : super(key: key);
-
+class ProfileUpdateScreen extends StatefulWidget {
   @override
-  State<RegistrationPage> createState() => _RegistrationPageState();
+  State<ProfileUpdateScreen> createState() => _ProfileUpdateScreenState();
 }
 
-class _RegistrationPageState extends State<RegistrationPage> {
+class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _ageController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
   String? _selectedGender;
   File? _imageFile;
+  String? _imageUrl;
 
   final ImagePicker _picker = ImagePicker();
 
   @override
-  void dispose() {
-    _nameController.dispose();
-    _ageController.dispose();
-    _addressController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      var user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        throw Exception("User not logged in");
+      }
+
+      var userData = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      if (userData.exists) {
+        var data = userData.data()!;
+        _nameController.text = data['name'] ?? '';
+        _ageController.text = data['age'] ?? '';
+        _addressController.text = data['address'] ?? '';
+        _selectedGender = data['gender'] ?? '';
+        _imageUrl = data['imageUrl']; // Load image URL
+
+        setState(() {
+          if (_imageUrl != null) {
+            // Optionally set _imageFile if needed
+          }
+        });
+      }
+    } catch (e) {
+      print('Error loading user data: $e');
+    }
   }
 
   Future<void> _pickImage() async {
@@ -95,7 +116,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
     );
   }
 
-  Future<String> _uploadImageToFirebaseStorage(File imageFile) async {
+  Future<String?> _uploadImageToFirebaseStorage(File imageFile) async {
     try {
       final Reference storageRef = FirebaseStorage.instance.ref();
       final Reference imageRef = storageRef
@@ -105,11 +126,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
       return imageUrl;
     } catch (e) {
       print('Error uploading image: $e');
-      throw e;
+      return null;
     }
   }
 
-  void _submitDetails() async {
+  void _submitUpdates() async {
     String name = _nameController.text.trim();
     String age = _ageController.text.trim();
     String address = _addressController.text.trim();
@@ -128,42 +149,34 @@ class _RegistrationPageState extends State<RegistrationPage> {
         throw Exception("User not logged in");
       }
 
-      String phone = widget.phoneNumber.startsWith("+91")
-          ? widget.phoneNumber.substring(3)
-          : widget.phoneNumber;
-
-      String imageUrl = '';
+      String imageUrl = _imageUrl ?? '';
       if (_imageFile != null) {
-        imageUrl = await _uploadImageToFirebaseStorage(_imageFile!);
+        imageUrl = await _uploadImageToFirebaseStorage(_imageFile!) ?? '';
       }
 
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        'uid': user.uid,
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
         'name': name,
-        'phone': phone,
+        'age': age,
         'gender': gender,
-        'age':age,
         'address': address,
         'imageUrl': imageUrl,
       });
 
-      Navigator.pushReplacement(
-          context, MaterialPageRoute(builder: (context) => HomePage()));
+      Navigator.pop(context);
     } catch (e) {
-      print('Error registering user: $e');
+      print('Error updating profile: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Registration failed. Please try again.')),
+        const SnackBar(content: Text('Update failed. Please try again.')),
       );
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // Orange container
+            // Profile image section
             Container(
               width: double.infinity,
               height: 350,
@@ -175,19 +188,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 children: [
                   Stack(
                     children: [
-                      CircleAvatar(
+               CircleAvatar(
                         radius: 50,
-                        backgroundColor: Colors.grey,
                         backgroundImage: _imageFile != null
-                            ? FileImage(_imageFile!)
-                            : null,
-                        child: _imageFile == null
-                            ? const Icon(
-                          Icons.person,
-                          size: 50,
-                          color: Colors.white,
-                        )
-                            : null,
+                            ? FileImage(File(_imageFile!.path)) as ImageProvider<Object>
+                            : NetworkImage(_imageUrl!),
+
                       ),
                       Positioned(
                         bottom: 0,
@@ -208,15 +214,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     ],
                   ),
                   const SizedBox(height: 30),
-                  const Text(
-                    "Please fill in the details below",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
                 ],
               ),
             ),
@@ -234,7 +231,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 children: [
                   const SizedBox(height: 20),
                   const Text(
-                    'Personal Details',
+                    'Update Your Details',
                     style: TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -290,8 +287,13 @@ class _RegistrationPageState extends State<RegistrationPage> {
                       child: Text(label),
                     ))
                         .toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedGender = value;
+                      });
+                    },
                     decoration: InputDecoration(
-                      labelText: 'Gender',
+                      labelText: "Gender",
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: const BorderSide(color: Colors.grey),
@@ -306,12 +308,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             color: Colors.orange, width: 1.0),
                       ),
                     ),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedGender = value;
-                      });
-                    },
-                    hint: const Text('Select Gender'),
                   ),
                   const SizedBox(height: 20),
                   TextFormField(
@@ -332,11 +328,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             color: Colors.orange, width: 1.0),
                       ),
                     ),
-
                   ),
-                  const SizedBox(height: 30),
+                  const SizedBox(height: 40),
                   ElevatedButton(
-                    onPressed: _submitDetails,
+                    onPressed: _submitUpdates,
                     child: Text(
                       'Register',
                       style: TextStyle(

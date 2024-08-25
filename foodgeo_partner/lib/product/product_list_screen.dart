@@ -14,7 +14,7 @@ class ProductListScreen extends StatelessWidget {
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.orange, Colors.deepOrange],
+              colors: [Colors.orange, Colors.orange],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
@@ -39,10 +39,12 @@ class ProductListScreen extends StatelessWidget {
             return Center(child: CircularProgressIndicator());
           } else if (restaurantSnapshot.hasError) {
             return Center(child: Text('Error: ${restaurantSnapshot.error}'));
-          } else if (!restaurantSnapshot.hasData || !restaurantSnapshot.data!.exists) {
+          } else if (!restaurantSnapshot.hasData ||
+              !restaurantSnapshot.data!.exists) {
             return Center(child: Text('Restaurant not found.'));
           } else {
-            var restaurantData = restaurantSnapshot.data!.data() as Map<String, dynamic>;
+            var restaurantData =
+                restaurantSnapshot.data!.data() as Map<String, dynamic>;
 
             return StreamBuilder<QuerySnapshot>(
               stream: FirebaseFirestore.instance
@@ -50,11 +52,13 @@ class ProductListScreen extends StatelessWidget {
                   .where('restaurantId', isEqualTo: restaurantId)
                   .snapshots(),
               builder: (context, productSnapshot) {
-                if (productSnapshot.connectionState == ConnectionState.waiting) {
+                if (productSnapshot.connectionState ==
+                    ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
                 } else if (productSnapshot.hasError) {
                   return Center(child: Text('Error: ${productSnapshot.error}'));
-                } else if (!productSnapshot.hasData || productSnapshot.data!.docs.isEmpty) {
+                } else if (!productSnapshot.hasData ||
+                    productSnapshot.data!.docs.isEmpty) {
                   return Center(child: Text('No products found.'));
                 } else {
                   var products = productSnapshot.data!.docs;
@@ -75,11 +79,11 @@ class ProductListScreen extends StatelessWidget {
                             children: [
                               restaurantData['imageUrl'] != null
                                   ? Image.network(
-                                restaurantData['imageUrl'],
-                                width: double.infinity,
-                                height: 150,
-                                fit: BoxFit.cover,
-                              )
+                                      restaurantData['imageUrl'],
+                                      width: double.infinity,
+                                      height: 150,
+                                      fit: BoxFit.cover,
+                                    )
                                   : Icon(Icons.restaurant, size: 100),
                               SizedBox(height: 10),
                               Text(
@@ -99,9 +103,12 @@ class ProductListScreen extends StatelessWidget {
                                   color: Colors.black87,
                                 ),
                               ),
-                              Text('Address: ${restaurantData['address'] ?? 'No address'}'),
-                              Text('Location: ${restaurantData['location'] ?? 'No location'}'),
-                              Text('Category: ${restaurantData['category'] ?? 'No category'}'),
+                              Text(
+                                  'Address: ${restaurantData['address'] ?? 'No address'}'),
+                              Text(
+                                  'Location: ${restaurantData['location'] ?? 'No location'}'),
+                              Text(
+                                  'Category: ${restaurantData['category'] ?? 'No category'}'),
                             ],
                           ),
                         ),
@@ -109,93 +116,111 @@ class ProductListScreen extends StatelessWidget {
                       // Product List in GridView
                       GridView.builder(
                         shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(), // Prevents scrolling inside the GridView
+                        physics: NeverScrollableScrollPhysics(),
                         itemCount: products.length,
                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2, // Number of columns in the grid
                           crossAxisSpacing: 10.0,
                           mainAxisSpacing: 10.0,
-                          childAspectRatio: 0.75, // Adjust as needed
+                          childAspectRatio: 0.55, // Adjust as needed
                         ),
                         itemBuilder: (context, index) {
-                          var product = products[index].data() as Map<String, dynamic>;
-                          String productId = products[index].id; // Get the product ID
+                          var product =
+                              products[index].data() as Map<String, dynamic>;
+                          String productId =
+                              products[index].id; // Get the product ID
 
-                          return Card(
-                            elevation: 5.0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10.0),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Expanded(
-                                  child: Stack(
-                                    children: [
-                                      product['image'] != null
-                                          ? ClipRRect(
-                                        borderRadius: BorderRadius.vertical(top: Radius.circular(10.0)),
-                                        child: Image.network(
-                                          product['image'],
-                                          fit: BoxFit.cover,
-                                          width: double.infinity,
-                                        ),
-                                      )
-                                          : Icon(Icons.fastfood, size: 100),
-                                      Positioned(
-                                        top: 5,
-                                        right: 5,
-                                        child: PopupMenuButton<String>(
-                                          onSelected: (value) {
-                                            if (value == 'Edit') {
-                                              Navigator.push(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) => ProductEdit(productId: productId),
+                          return GestureDetector(
+                            child: Card(
+                              elevation: 5.0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(5.0),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Expanded(
+                                    child: Stack(
+                                      children: [
+                                        product['image'] != null
+                                            ? ClipRRect(
+                                                borderRadius:
+                                                    BorderRadius.vertical(
+                                                        top: Radius.circular(
+                                                            5.0)),
+                                                child: Image.network(
+                                                  product['image'],
+                                                  fit: BoxFit.cover,
+                                                  width: double.infinity,
                                                 ),
-                                              );
-                                            } else if (value == 'Delete') {
-                                              _deleteProduct(context, productId); // Pass the context here
-                                            }
-                                          },
-                                          itemBuilder: (context) => [
-                                            PopupMenuItem(
-                                              value: 'Edit',
-                                              child: Text('Edit'),
+                                              )
+                                            : Icon(Icons.fastfood, size: 100),
+                                      ],
+                                    ),
+                                  ),
+                                  Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Name: ${product['name'] ?? 'No product name'}',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        Text(
+                                          'Des: ${product['description'] ?? 'No product description'}',
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                        SizedBox(height: 4),
+                                        Text('Price: ${product['price']}'),
+                                        Text('items: ${product['items']}'),
+                                        Text('category: ${product['category']}'),
+                                        SizedBox(height: 8),
+                                        // Add some space before the buttons
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            TextButton(
+                                              onPressed: () {
+                                               Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProductEdit(productId: productId, onProductUpdated: () {  }, ),));
+                                              },
+                                              child: Text(
+                                                'Edit',
+                                                style: TextStyle(
+                                                    color: Colors.blue),
+                                              ),
                                             ),
-                                            PopupMenuItem(
-                                              value: 'Delete',
-                                              child: Text('Delete'),
+                                            SizedBox(width: 8),
+                                            // Space between buttons
+                                            TextButton(
+                                              onPressed: () {
+                                                // Handle delete action
+                                                _deleteProduct(
+                                                    context, productId);
+                                              },
+                                              child: Text(
+                                                'Delete',
+                                                style: TextStyle(
+                                                    color: Colors.red),
+                                              ),
                                             ),
                                           ],
-                                          icon: Icon(Icons.more_vert, color: Colors.white),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
-                                ),
-                                Padding(
-                                  padding: const EdgeInsets.all(8.0),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        product['name'] ?? 'No product name',
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      SizedBox(height: 4),
-                                      Text('Price: ${product['price']}'),
-                                      Text('Quantity: ${product['quantity']}'),
-                                    ],
-                                  ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           );
                         },
-                      ),
+                      )
                     ],
                   );
                 }
@@ -206,7 +231,6 @@ class ProductListScreen extends StatelessWidget {
       ),
     );
   }
-
   Future<void> _deleteProduct(BuildContext context, String productId) async {
     bool? confirmDelete = await showDialog<bool>(
       context: context,
@@ -216,11 +240,11 @@ class ProductListScreen extends StatelessWidget {
           content: Text('Are you sure you want to delete this product?'),
           actions: [
             TextButton(
-              onPressed: () => Navigator.of(context).pop(false), // User pressed 'Cancel'
+              onPressed: () => Navigator.of(context).pop(false),
               child: Text('Cancel'),
             ),
             TextButton(
-              onPressed: () => Navigator.of(context).pop(true), // User pressed 'Delete'
+              onPressed: () => Navigator.of(context).pop(true),
               child: Text('Delete'),
             ),
           ],
@@ -230,10 +254,15 @@ class ProductListScreen extends StatelessWidget {
 
     if (confirmDelete == true) {
       try {
-        await FirebaseFirestore.instance.collection('products').doc(productId).delete();
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Product deleted successfully')));
+        await FirebaseFirestore.instance
+            .collection('products')
+            .doc(productId)
+            .delete();
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Product deleted successfully')));
       } catch (error) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error deleting product')));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('Error deleting product')));
       }
     }
   }

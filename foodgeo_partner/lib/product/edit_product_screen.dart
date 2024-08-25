@@ -6,8 +6,9 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class ProductEdit extends StatefulWidget {
   final String productId;
+  final VoidCallback onProductUpdated;
 
-  const ProductEdit({Key? key, required this.productId}) : super(key: key);
+  const ProductEdit({Key? key, required this.productId,  required this.onProductUpdated}) : super(key: key);
 
   @override
   _ProductEditState createState() => _ProductEditState();
@@ -20,7 +21,17 @@ class _ProductEditState extends State<ProductEdit> {
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
   late TextEditingController _priceController;
-  late TextEditingController _quantityController;
+  late TextEditingController _itemsController;
+
+  final List<String> _categories = [
+    'Appetizer',
+    'Main Course',
+    'Dessert',
+    'Beverage',
+    // Add more categories as needed
+  ];
+
+  String? _selectedCategory;
 
   @override
   void initState() {
@@ -28,7 +39,7 @@ class _ProductEditState extends State<ProductEdit> {
     _nameController = TextEditingController();
     _descriptionController = TextEditingController();
     _priceController = TextEditingController();
-    _quantityController = TextEditingController();
+    _itemsController = TextEditingController();
     _loadProductData();
   }
 
@@ -37,7 +48,7 @@ class _ProductEditState extends State<ProductEdit> {
     _nameController.dispose();
     _descriptionController.dispose();
     _priceController.dispose();
-    _quantityController.dispose();
+    _itemsController.dispose();
     super.dispose();
   }
 
@@ -49,8 +60,9 @@ class _ProductEditState extends State<ProductEdit> {
         _nameController.text = productData['name'] ?? '';
         _descriptionController.text = productData['description'] ?? '';
         _priceController.text = productData['price'].toString();
-        _quantityController.text = productData['quantity'].toString();
+        _itemsController.text = productData['items'].toString();
         _existingImageUrl = productData['image'];
+        _selectedCategory = productData['category'];
       });
     }
   }
@@ -77,7 +89,8 @@ class _ProductEditState extends State<ProductEdit> {
     if (_nameController.text.isEmpty ||
         _descriptionController.text.isEmpty ||
         _priceController.text.isEmpty ||
-        _quantityController.text.isEmpty) {
+        _itemsController.text.isEmpty ||
+        _selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please fill all fields')));
       return;
     }
@@ -93,14 +106,15 @@ class _ProductEditState extends State<ProductEdit> {
     final String name = _nameController.text;
     final String description = _descriptionController.text;
     final String price = _priceController.text;
-    final String quantity = _quantityController.text;
+    final String quantity = _itemsController.text;
 
     final Map<String, dynamic> productData = {
       'name': name,
       'description': description,
       'price': double.parse(price),
-      'quantity': int.parse(quantity),
+      'items': int.parse(quantity),
       'image': imageUrl,
+      'category': _selectedCategory,
     };
 
     await FirebaseFirestore.instance.collection('products').doc(widget.productId).update(productData);
@@ -212,12 +226,34 @@ class _ProductEditState extends State<ProductEdit> {
               ),
               SizedBox(height: 20),
               TextField(
-                controller: _quantityController,
+                controller: _itemsController,
                 decoration: InputDecoration(
-                  labelText: 'Quantity',
+                  labelText: 'Items',
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.number,
+              ),
+              SizedBox(height: 20),
+              DropdownButtonFormField<String>(
+                value: _selectedCategory,
+                hint: Text('Select food category'),
+                items: _categories.map((String category) {
+                  return DropdownMenuItem<String>(
+                    value: category,
+                    child: Text(category),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedCategory = newValue;
+                  });
+                },
+                decoration: InputDecoration(
+                  labelText: 'Category',
+                  border: OutlineInputBorder(),
+                ),
+                isExpanded: true,
+                icon: Icon(Icons.arrow_drop_down, color: Colors.orange),
               ),
               SizedBox(height: 20),
               Container(

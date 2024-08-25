@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart'; // For input formatters
 
 class CustomTextField extends StatelessWidget {
   final String labelText;
@@ -7,6 +8,8 @@ class CustomTextField extends StatelessWidget {
   final bool obscureText;
   final Widget? suffixIcon;
   final String? Function(String?)? validator; // Optional validator
+  final TextInputType? keyboardType; // Optional keyboard type
+  final List<TextInputFormatter>? inputFormatters; // Optional input formatters
 
   const CustomTextField({
     Key? key,
@@ -16,6 +19,8 @@ class CustomTextField extends StatelessWidget {
     this.obscureText = false,
     this.suffixIcon,
     this.validator,
+    this.keyboardType, // Add this
+    this.inputFormatters, // Add this
   }) : super(key: key);
 
   @override
@@ -23,15 +28,16 @@ class CustomTextField extends StatelessWidget {
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
-      keyboardType: labelText == "Phone Number" ? TextInputType.text : TextInputType.text,
+      keyboardType: keyboardType, // Use keyboardType here
+      inputFormatters: inputFormatters, // Use inputFormatters here
       validator: validator,
       decoration: InputDecoration(
-        prefixIcon: Icon(icon, color: Colors.orange),
+        prefixIcon: Icon(icon, color: Colors.black),
         suffixIcon: suffixIcon,
         labelText: labelText,
         labelStyle: TextStyle(
           fontWeight: FontWeight.bold,
-          color: Colors.orange,
+          color: Colors.black,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),

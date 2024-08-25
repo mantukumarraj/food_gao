@@ -1,12 +1,14 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:foodgeo_partner/views/screen/home_page.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:foodgeo_partner/views/screen/home_page.dart';
+import 'package:uuid/uuid.dart';
 
 class ProductAdd extends StatefulWidget {
-  final String restaurantId; // Accept restaurantId as a parameter
+  final String restaurantId;
 
   const ProductAdd({Key? key, required this.restaurantId}) : super(key: key);
 
@@ -20,7 +22,18 @@ class _ProductAddState extends State<ProductAdd> {
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
   late TextEditingController _priceController;
-  late TextEditingController _quantityController;
+  late TextEditingController _itemsController;
+
+  final List<String> _categories = [
+    'Appetizer',
+    'Main Course',
+    'Dessert',
+    'Beverage',
+  ];
+
+  String? _selectedCategory;
+  bool _isLoading = false;
+
 
   @override
   void initState() {
@@ -28,7 +41,7 @@ class _ProductAddState extends State<ProductAdd> {
     _nameController = TextEditingController();
     _descriptionController = TextEditingController();
     _priceController = TextEditingController();
-    _quantityController = TextEditingController();
+    _itemsController = TextEditingController();
   }
 
   @override
@@ -36,12 +49,12 @@ class _ProductAddState extends State<ProductAdd> {
     _nameController.dispose();
     _descriptionController.dispose();
     _priceController.dispose();
-    _quantityController.dispose();
+    _itemsController.dispose();
     super.dispose();
   }
 
   Future<void> _pickImageFromGallery() async {
-    final pickedFile = await ImagePicker().getImage(source: ImageSource.gallery);
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
 
     setState(() {
       if (pickedFile != null) {
@@ -51,7 +64,7 @@ class _ProductAddState extends State<ProductAdd> {
   }
 
   Future<void> _pickImageFromCamera() async {
-    final pickedFile = await ImagePicker().getImage(source: ImageSource.camera);
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.camera);
 
     setState(() {
       if (pickedFile != null) {
@@ -65,46 +78,66 @@ class _ProductAddState extends State<ProductAdd> {
         _nameController.text.isEmpty ||
         _descriptionController.text.isEmpty ||
         _priceController.text.isEmpty ||
-        _quantityController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please fill all fields')));
+        _itemsController.text.isEmpty ||
+        _selectedCategory == null) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Please fill all fields')));
       return;
     }
 
-    final ref = _storage.ref().child('productImage/${DateTime.now().millisecondsSinceEpoch}.jpg');
-    await ref.putFile(_imageFile!);
+    setState(() {
+      _isLoading = true; // Start loading
+    });
 
-    final downloadUrl = await ref.getDownloadURL();
+    try {
+      final User? user = FirebaseAuth.instance.currentUser;
+      final String? userId = user?.uid;
 
-    // Retrieve values from text fields
-    final String name = _nameController.text;
-    final String description = _descriptionController.text;
-    final String price = _priceController.text;
-    final String quantity = _quantityController.text;
+      if (userId == null) {
+        throw 'User not logged in';
+      }
 
-    // Construct product data
-    final Map<String, dynamic> productData = {
-      'name': name,
-      'description': description,
-      'price': price,
-      'quantity': quantity,
-      'image': downloadUrl.toString(),
-      'restaurantId': widget.restaurantId, // Include restaurantId in product data
-    };
+      final ref = _storage.ref().child(
+          'productImage/${DateTime.now().millisecondsSinceEpoch}.jpg');
+      await ref.putFile(_imageFile!);
 
-    // Store product data in Firestore
-    DocumentReference productRef = await FirebaseFirestore.instance.collection('products').add(productData);
-    String productId = productRef.id; // Get the ID of the newly added product
-    productData['product_Id'] = productId; // Add the product ID to the product data
+      final downloadUrl = await ref.getDownloadURL();
 
-    // Update product data in Firestore with the ID
-    await productRef.update(productData);
+      final String name = _nameController.text;
+      final String description = _descriptionController.text;
+      final String price = _priceController.text;
+      final String items = _itemsController.text;
 
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Product uploaded successfully')));
+      final String productId = Uuid().v4();
 
-    // Check if all fields are filled and image is uploaded successfully
-    if (_imageFile != null && !_nameController.text.isEmpty && !_descriptionController.text.isEmpty && !_priceController.text.isEmpty && !_quantityController.text.isEmpty) {
-      // Navigate to HomePage or any other screen
-      Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage()));
+      final Map<String, dynamic> productData = {
+        'productId': productId,
+        'name': name,
+        'description': description,
+        'price': price,
+        'items': items,
+        'category': _selectedCategory,
+        'image': downloadUrl.toString(),
+        'restaurantId': widget.restaurantId,
+        'userId': userId,
+      };
+
+      await FirebaseFirestore.instance.collection('products').doc(productId).set(productData);
+
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Product uploaded successfully')));
+
+      await Future.delayed(Duration(seconds: 2)); // Delay for 2 seconds to show the message
+
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (context) => HomePage()));
+    } catch (e) {
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Error: $e')));
+    } finally {
+      setState(() {
+        _isLoading = false; // Stop loading
+      });
     }
   }
 
@@ -115,16 +148,19 @@ class _ProductAddState extends State<ProductAdd> {
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.orange, Colors.deepOrange],
+              colors: [Colors.orange, Colors.orange],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
           ),
         ),
-        title: Text("Product Add",textAlign: TextAlign.center,style: TextStyle(color: Colors.white),
+        title: Text(
+          "Product Add",
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.white),
         ),
         iconTheme: IconThemeData(
-          color: Colors.white, // Change the back icon color to white
+          color: Colors.white,
         ),
       ),
       body: SingleChildScrollView(
@@ -208,34 +244,65 @@ class _ProductAddState extends State<ProductAdd> {
               ),
               SizedBox(height: 20),
               TextField(
-                controller: _quantityController,
+                controller: _itemsController,
                 decoration: InputDecoration(
-                  labelText: 'Quantity',
+                  labelText: 'Items',
                   border: OutlineInputBorder(),
                 ),
                 keyboardType: TextInputType.number,
               ),
               SizedBox(height: 20),
-              Container(
-                width: double.infinity,
-                height: 45,
-                child: MaterialButton(
-                  onPressed: () async {
-                    await _uploadImage();
-                  },
-                  color: Colors.orange,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  child: Text(
-                    'Add Product',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+              DropdownButtonFormField<String>(
+                value: _selectedCategory,
+                hint: Text('Select food Category'),
+                items: _categories.map((String category) {
+                  return DropdownMenuItem<String>(
+                    value: category,
+                    child: Text(category),
+                  );
+                }).toList(),
+                onChanged: (String? newValue) {
+                  setState(() {
+                    _selectedCategory = newValue;
+                  });
+                },
+                decoration: InputDecoration(
+                  labelText: 'Category',
+                  border: OutlineInputBorder(),
+                ),
+                isExpanded: true, // Make dropdown expand to fill available space
+                icon: Icon(Icons.arrow_drop_down, color: Colors.orange), // Customize dropdown icon
+              ),
+              SizedBox(height: 20),
+              Stack(
+                alignment: Alignment.center,
+                children: [
+                  Container(
+                    width: double.infinity,
+                    height: 45,
+                    child: MaterialButton(
+                      onPressed: _isLoading ? null : () async {
+                        await _uploadImage();
+                      },
+                      color: Colors.orange,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8.0),
+                      ),
+                      child: Text(
+                        'Add Product',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
-                ),
+                  if (_isLoading)
+                    CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+                    ),
+                ],
               ),
             ],
           ),

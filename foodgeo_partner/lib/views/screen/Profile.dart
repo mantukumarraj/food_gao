@@ -1,273 +1,191 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
+import 'package:foodgeo_partner/views/screen/phone_verification_screen.dart';
+import 'package:foodgeo_partner/views/screen/profile_edit_screen.dart';
+import 'package:foodgeo_partner/views/screen/restaurant_register_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 
-import 'home_page.dart';
+class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({Key? key}) : super(key: key);
 
-class ProfilePage extends StatefulWidget {
   @override
-  _ProfilePageState createState() => _ProfilePageState();
+  _ProfileScreenState createState() => _ProfileScreenState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
-  final _nameController = TextEditingController();
-  final _addressController = TextEditingController();
-  final _genderController = TextEditingController();
-  final _imageUrlController = TextEditingController();
-  File? _imageFile;
+class _ProfileScreenState extends State<ProfileScreen> {
+  bool switchValue = true;
+  String? userName;
+  String? userProfileImage;
 
-  bool _isEditing = false;
+  User? get _currentUser => FirebaseAuth.instance.currentUser;
 
   @override
   void initState() {
     super.initState();
-    _fetchUserProfile();
+    _fetchUserData();
   }
 
-  Future<void> _fetchUserProfile() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    DocumentReference docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
-
-    DocumentSnapshot doc = await docRef.get();
-    var data = doc.data() as Map<String, dynamic>;
-
-    setState(() {
-      _nameController.text = data['name'] ?? '';
-      _addressController.text = data['address'] ?? '';
-      _genderController.text = data['gender'] ?? '';
-      _imageUrlController.text = data['imageUrl'] ?? '';
-    });
-  }
-
-  Future<void> _updateProfile() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user == null) return;
-
-    String imageUrl = _imageUrlController.text; // Existing image URL
-
-    // If a new image is selected, upload it to Firebase Storage
-    if (_imageFile != null) {
-      final fileName = '${user.uid}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      final storageRef = FirebaseStorage.instance.ref().child('user_images/$fileName');
-
+  Future<void> _fetchUserData() async {
+    if (_currentUser != null) {
       try {
-        await storageRef.putFile(_imageFile!);
-        imageUrl = await storageRef.getDownloadURL();
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(_currentUser!.uid)
+            .get();
+        setState(() {
+          userName = userDoc['name'];  // Fetch user's name
+          userProfileImage = userDoc['imageUrl'];  // Fetch user's profile image URL
+        });
       } catch (e) {
-        print('Failed to upload image: $e');
-        // You can also show an error message to the user
+        print('Error fetching user data: $e');
       }
     }
-
-    // Update Firestore with the new profile data
-    DocumentReference docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
-
-    await docRef.update({
-      'name': _nameController.text,
-      'address': _addressController.text,
-      'gender': _genderController.text,
-      'imageUrl': imageUrl, // Update the image URL if it changed
-    });
-
-    setState(() {
-      _isEditing = false;
-    });
-  }
-
-  Future<void> _pickImage(ImageSource source) async {
-    final pickedFile = await ImagePicker().pickImage(source: source);
-    if (pickedFile != null) {
-      setState(() {
-        _imageFile = File(pickedFile.path);
-        _imageUrlController.text = pickedFile.path; // Update the URL controller
-      });
-    }
-    Navigator.pop(context); // Close the bottom sheet
-  }
-
-  void _showImagePickerSheet() {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        return SafeArea(
-          child: Wrap(
-            children: <Widget>[
-              ListTile(
-                leading: Icon(Icons.photo_library),
-                title: Text('Gallery'),
-                onTap: () => _pickImage(ImageSource.gallery),
-              ),
-              ListTile(
-                leading: Icon(Icons.photo_camera),
-                title: Text('Camera'),
-                onTap: () => _pickImage(ImageSource.camera),
-              ),
-            ],
-          ),
-        );
-      },
-    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Colors.orange, Colors.deepOrange],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pushReplacement(
-                context, MaterialPageRoute(builder: (context) => HomePage()));
-          },
-          icon: Icon(Icons.arrow_back),
-        ),
-        title: Text(
-          'Profile',
-          style: TextStyle(color: Colors.white,),
-          textAlign: TextAlign.center,
-        ),
-        iconTheme: IconThemeData(
-          color: Colors.white, // Change the back icon color to white
-        ),
-      ),
-      body: GestureDetector(
-        onTap: () {
-          if (_isEditing) {
-            setState(() {
-              _isEditing = false;
-            });
-          }
-        },
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Card(
-            elevation: 4,
-            child: SizedBox(
-              width: 400,
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: SingleChildScrollView( // Added SingleChildScrollView
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: <Widget>[
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          CircleAvatar(
-                            radius: 80,
-                            backgroundImage: _imageFile != null
-                                ? FileImage(_imageFile!)
-                                : _imageUrlController.text.isNotEmpty
-                                ? NetworkImage(_imageUrlController.text)
-                                : AssetImage('assets/default_avatar.png')
-                            as ImageProvider,
-                            backgroundColor: Colors.grey[200],
-                          ),
-                          Positioned(
-                            left: 120,
-                            top: 100,
-                            child: IconButton(
-                              icon: Icon(Icons.add_a_photo,
-                                  color: Colors.deepOrange, size: 30),
-                              onPressed: _showImagePickerSheet,
-                            ),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 16),
-                      _isEditing
-                          ? Column(
-                        children: [
-                          TextFormField(
-                            controller: _nameController,
-                            decoration: InputDecoration(labelText: 'Name'),
-                          ),
-                          SizedBox(height: 8),
-                          TextFormField(
-                            controller: _addressController,
-                            decoration: InputDecoration(labelText: 'Address'),
-                          ),
-                          SizedBox(height: 8),
-                          TextFormField(
-                            controller: _genderController,
-                            decoration: InputDecoration(labelText: 'Gender'),
-                          ),
-                          SizedBox(height: 16),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              TextButton(
-                                onPressed: _updateProfile,
-                                child: Text('Save',style: TextStyle(fontSize: 20,color: Colors.deepOrange),),
-                              ),
-                              SizedBox(width: 16), // Space between the buttons
-                              TextButton(
-                                onPressed: () {
-                                  setState(() {
-                                    _isEditing = false;
-                                  });
-                                },
-                                child: Text('Cancel',style: TextStyle(fontSize: 20,color: Colors.deepOrange),),
-                              ),
-                            ],
-                          ),
-                        ],
-                      )
-                          : Column(
-                        children: [
-                          Text(
-                            'Name: ${_nameController.text}',
-                            style: TextStyle(
-                                fontSize: 22,
-                                fontWeight: FontWeight.bold),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Address: ${_addressController.text}',
-                            style: TextStyle(fontSize: 18),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Gender: ${_genderController.text}',
-                            style: TextStyle(fontSize: 18),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: 16),
-                          TextButton(
-                            onPressed: () {
-                              setState(() {
-                                _isEditing = true;
-                              });
-                            },
-                            child: Text('Edit Profile',style: TextStyle(color: Colors.deepOrange),),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          // Header section
+          Container(
+            width: double.infinity,
+            height: 260,
+            decoration: const BoxDecoration(
+              color: Color(0xFFFFA726),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(100),
               ),
             ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircleAvatar(
+                  radius: 50,
+                  backgroundColor: Colors.white,
+                  backgroundImage: userProfileImage != null
+                      ? NetworkImage(userProfileImage!)
+                      : null,  // Use user's profile image or show an icon if null
+                  child: userProfileImage == null
+                      ? const Icon(Icons.person, size: 50, color: Color(0xFFFFA726))
+                      : null,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  userName ?? 'Loading...',  // Show user's name or "Loading..." while data is fetched
+                  style: GoogleFonts.poppins(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
+
+          // Menu items
+          Expanded(
+            child: ListView(
+              children: [
+                _buildMenuItem(Icons.person, 'My Profile', () {
+                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfileUpdateScreen(),));
+
+                }),
+
+                _buildMenuItem(Icons.restaurant_menu, 'Register Your Restaurant', () {
+                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => RestaurantRegistrationPage(),));
+                }),
+                // Assuming you have a variable isVerified that checks if the user is verified
+
+
+                _buildMenuItem(Icons.receipt, 'Orders', () {
+                  // Navigate to Orders Screen
+                }),
+
+
+                _buildMenuItem(Icons.settings, 'Settings', () {
+                  // Navigate to Settings Screen
+                }),
+                Divider(),
+                _buildMenuItem(Icons.exit_to_app, 'Logout', () {
+                  _showLogoutDialog(context);
+                }),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
+
+  Widget _buildMenuItem(IconData icon, String title, [VoidCallback? onTap]) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.black26),
+      title: Text(
+        title,
+        style: GoogleFonts.poppins(fontSize: 18, color: Colors.black87),
+      ),
+      onTap: onTap ?? () {},
+    );
+  }
+
+  Widget _buildMenuItemWithSwitch(IconData icon, String title) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.black54),
+      title: Text(
+        title,
+        style: GoogleFonts.poppins(fontSize: 18, color: Colors.black87),
+      ),
+      trailing: Switch(
+        value: switchValue,
+        onChanged: (bool newValue) {
+          setState(() {
+            switchValue = newValue;
+          });
+        },
+        activeColor: Colors.orange,
+      ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(
+            "Are you sure you want to logout?",
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+              fontSize: 15
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                await FirebaseAuth.instance.signOut();
+                Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => PhoneAuthView()));
+                ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("You have logged out")));
+              },
+              child: Text("logout"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text("Cancel"),
+            ),
+          ],
+        );
+      },
+    );
+  }
 }
+
