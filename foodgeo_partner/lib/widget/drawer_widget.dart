@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:foodgeo_partner/views/screen/add_product.dart';
-import 'package:foodgeo_partner/views/screen/hhgh.dart';
 import 'package:foodgeo_partner/views/screen/phone_verification_screen.dart';
 import 'package:foodgeo_partner/views/screen/profile_page.dart';
 import 'package:foodgeo_partner/views/screen/update_page.dart';
+import '../views/screen/RestaurantListScreen.dart';
 import '../views/screen/restaurant_register_screen.dart';
+import '../views/screen/upload_screen.dart';
 
-class DrawerW extends StatefulWidget {
-  const DrawerW({super.key});
+class DrawerWidget extends StatefulWidget {
+  const DrawerWidget({super.key});
 
   @override
-  State<DrawerW> createState() => _DrawerWState();
+  State<DrawerWidget> createState() => _DrawerWidgetState();
 }
 
-class _DrawerWState extends State<DrawerW> {
+class _DrawerWidgetState extends State<DrawerWidget> {
   String? name;
   String? address;
   String? imageUrl;
@@ -114,7 +114,7 @@ class _DrawerWState extends State<DrawerW> {
             leading: Icon(Icons.home, color: Colors.orange),
             title: Text('Home'),
             onTap: () {
-              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProductGrid()));
+              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => RestaurantListScreen()));
             },
           ),
           ListTile(
@@ -150,7 +150,7 @@ class _DrawerWState extends State<DrawerW> {
             title: Text('Profile'),
             onTap: () {
               Navigator.pushReplacement(context,
-                  MaterialPageRoute(builder: (context) => ProfilePage()));
+                  MaterialPageRoute(builder: (context) => ProfileScreen()));
             },
           ),
           ListTile(
@@ -185,7 +185,7 @@ class _DrawerWState extends State<DrawerW> {
                                             Navigator.pushReplacement(
                                                 context,
                                                 MaterialPageRoute(
-                                                    builder: (context) => PhoneAuth()));
+                                                    builder: (context) => PhoneAuthView()));
                                             ScaffoldMessenger.of(context)
                                                 .showSnackBar(SnackBar(
                                                 content: Text("You have logged out")));

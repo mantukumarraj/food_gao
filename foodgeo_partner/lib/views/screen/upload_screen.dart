@@ -1,9 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import '../../services/add_product.dart';
+import '../../services/add_product.dart'; // Ensure this path is correct
+import '../../widget/custom_text_field.dart';
 import '../widget/costum_buttom.dart';
-import '../widget/costum_textfeld.dart';
-import '../widget/image_picker_widget.dart';
+import '../widget/image_picker_widget.dart'; // Fixed typo in import path
 
 class AddProductScreen extends StatefulWidget {
   @override
@@ -33,7 +33,6 @@ class _AddProductScreenState extends State<AddProductScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Restaurant Registered Successfully!')),
         );
-    
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Error: $e')),

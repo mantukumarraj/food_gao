@@ -1,16 +1,16 @@
-import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:foodgeo_partner/views/screen/register_screen.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
 import 'otp_verfication_screen.dart';
 
-class PhoneAuth extends StatefulWidget {
-  const PhoneAuth({Key? key}) : super(key: key);
 
+class PhoneAuthView extends StatefulWidget {
   @override
-  State<PhoneAuth> createState() => _PhoneAuthState();
+  _OtpScreenState createState() => _OtpScreenState();
 }
 
-class _PhoneAuthState extends State<PhoneAuth> {
+class _OtpScreenState extends State<PhoneAuthView> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   late String verificationId;
   bool isLoading = false;
@@ -26,8 +26,12 @@ class _PhoneAuthState extends State<PhoneAuth> {
       verificationCompleted: (PhoneAuthCredential credential) async {
         await _auth.signInWithCredential(credential);
         setState(() {
-          isLoading = true;
+          isLoading = false;
         });
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => RegistrationPage(phoneNumber: phoneNumber)),
+        );
       },
       verificationFailed: (FirebaseAuthException e) {
         setState(() {
@@ -46,9 +50,9 @@ class _PhoneAuthState extends State<PhoneAuth> {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => Verify(
-              verificationid: verificationId,
-              phoneNumber: phoneNumber,
+            builder: (context) => OtpScreen(
+              phoneNumber: phoneNumber.toString(),
+              verificationId: verificationId,
             ),
           ),
         );
@@ -64,126 +68,131 @@ class _PhoneAuthState extends State<PhoneAuth> {
 
   @override
   Widget build(BuildContext context) {
-    final mediaQuery = MediaQuery.of(context);
-    final height = mediaQuery.size.height;
-    final width = mediaQuery.size.width;
-    final padding = mediaQuery.padding;
-    final safeAreaHeight = height - padding.top - padding.bottom;
-
     return Scaffold(
-        appBar: AppBar(
-          title:
-             Text("PHONE AUTH"),
-
-          backgroundColor: Colors.orange,
-        ),
-        body: Padding(
-            padding: EdgeInsets.symmetric(horizontal: width * 0.05),
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  SizedBox(height: safeAreaHeight * 0.1),
-                  Container(
-                    width: width * 1.0,
-                    height: height * 0.3,
-                    padding: EdgeInsets.all(18.0),
-                    color: Colors.black, // Set the background color to black
+        body: Container(
+            width: double.infinity,
+            height: MediaQuery.of(context).size.height,
+            child: Stack(
+              children: [
+                // Yellow container
+                Container(
+                  width: double.infinity,
+                  height: 400,
+                  decoration: BoxDecoration(
+                    color: Colors.orange,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(30),
+                      topRight: Radius.circular(30),
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset('assets/Images/phoneicon.png',color: Colors.white,width: 60,height: 100,),
+                      SizedBox(height: 10),
+                      Text(
+                        "MOBILE PHONE",
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        "We need to Send OTP to authenticate your mobile",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // White container overlapping the yellow container
+                Positioned(
+                  top: 330,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    height: 470,
+                    padding: EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(50),
+                      ),
+                    ),
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
+                        SizedBox(height: 20),
                         Text(
-                          "India's #1 Food Delivery and Dining App",
+                          'Verify Number',
                           style: TextStyle(
-                            fontSize: 26,
+                            fontSize: 22,
                             fontWeight: FontWeight.bold,
-                            color: Colors.orange,
                           ),
-                          textAlign: TextAlign.center,
                         ),
-                        SizedBox(height: safeAreaHeight * 0.01),
-                        Text(
-                          "Phone Number Verification",
-                          style: TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey,
+                        SizedBox(height: 30),
+                        Container(
+                          margin: EdgeInsets.only(left: 18, right: 18),
+                          child: IntlPhoneField(
+                            decoration: InputDecoration(
+                              labelText: 'Phone Number',
+                              border: OutlineInputBorder(
+                                borderSide: BorderSide(),
+                              ),
+                            ),
+                            initialCountryCode: 'IN', // Set the initial country code
+                            onChanged: (phone) {
+                              setState(() {
+                                phoneNumber = phone.completeNumber;
+                              });
+                            },
                           ),
-                          textAlign: TextAlign.center,
                         ),
-                        SizedBox(height: safeAreaHeight * 0.01),
-                        Text(
-                          "Login in or sign up",
-                          style: TextStyle(
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey,
+                        SizedBox(height: 30),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              if (phoneNumber.isNotEmpty) {
+                                _verifyPhoneNumber();
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Please enter a phone number.")),
+                                );
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              padding: EdgeInsets.all(15),
+                              backgroundColor: Colors.orange,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            child: isLoading
+                                ? CircularProgressIndicator(
+                              color: Colors.white,
+                            )
+                                : Text(
+                              "Continue",
+                              style: TextStyle(
+                                fontSize: 18,
+                                color: Colors.white,
+                              ),
+                            ),
                           ),
-                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(height: safeAreaHeight * 0.07),
-                  IntlPhoneField(
-                    decoration: InputDecoration(
-                      labelText: 'Phone Number',
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(),
-                      ),
-                      labelStyle: TextStyle(color: Colors.black),
-                    ),
-                    initialCountryCode: 'IN',
-                    onChanged: (phone) {
-                      setState(() {
-                        phoneNumber = phone.completeNumber;
-                      });
-                    },
-                    style: TextStyle(color: Colors.black),
-                  ),
-                  SizedBox(height: safeAreaHeight * 0.03),
-                  Container(
-                    width: double.infinity,
-                    height: MediaQuery.of(context).size.height/16,
-                    margin: EdgeInsets.symmetric(horizontal: 18),
-                    child: MaterialButton(
-                      onPressed: () {
-                        if (phoneNumber.isNotEmpty) {
-                          _verifyPhoneNumber();
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text("Please enter a phone number.")),
-                          );
-                        }
-                      },
-                      color: Colors.orange,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      child: isLoading
-                          ? CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      )
-                          : Text(
-                        'Continue',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: 25),
-                  Text(
-                    'By continuing, you agree to our Terms of Service, Privacy Policy, and Content Policy',
-                    style: TextStyle(fontSize: 14, color: Colors.black),
-                    textAlign: TextAlign.center,
-                  ),
-                  SizedBox(height: safeAreaHeight * 0.05),
-                ],
-              ),
+                ),
+              ],
             ),
-            ),
+          ),
         );
     }
 }

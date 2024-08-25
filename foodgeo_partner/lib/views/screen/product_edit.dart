@@ -4,24 +4,34 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import '../../home_page.dart';
+class ProductEdit extends StatefulWidget {
+  final String productId;
+  final VoidCallback onProductUpdated;
 
-class ProductAdd extends StatefulWidget {
-  final String restaurantId; // Accept restaurantId as a parameter
-
-  const ProductAdd({Key? key, required this.restaurantId}) : super(key: key);
+  const ProductEdit({Key? key, required this.productId,  required this.onProductUpdated}) : super(key: key);
 
   @override
-  _ProductAddState createState() => _ProductAddState();
+  _ProductEditState createState() => _ProductEditState();
 }
 
-class _ProductAddState extends State<ProductAdd> {
+class _ProductEditState extends State<ProductEdit> {
   final FirebaseStorage _storage = FirebaseStorage.instance;
   File? _imageFile;
+  String? _existingImageUrl;
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
   late TextEditingController _priceController;
-  late TextEditingController _quantityController;
+  late TextEditingController _itemsController;
+
+  final List<String> _categories = [
+    'Appetizer',
+    'Main Course',
+    'Dessert',
+    'Beverage',
+    // Add more categories as needed
+  ];
+
+  String? _selectedCategory;
 
   @override
   void initState() {
@@ -29,7 +39,8 @@ class _ProductAddState extends State<ProductAdd> {
     _nameController = TextEditingController();
     _descriptionController = TextEditingController();
     _priceController = TextEditingController();
-    _quantityController = TextEditingController();
+    _itemsController = TextEditingController();
+    _loadProductData();
   }
 
   @override
@@ -37,13 +48,27 @@ class _ProductAddState extends State<ProductAdd> {
     _nameController.dispose();
     _descriptionController.dispose();
     _priceController.dispose();
-    _quantityController.dispose();
+    _itemsController.dispose();
     super.dispose();
   }
 
-  Future<void> _pickImageFromGallery() async {
-    final pickedFile = await ImagePicker().getImage(source: ImageSource.gallery);
+  Future<void> _loadProductData() async {
+    DocumentSnapshot productSnapshot = await FirebaseFirestore.instance.collection('products').doc(widget.productId).get();
+    if (productSnapshot.exists) {
+      var productData = productSnapshot.data() as Map<String, dynamic>;
+      setState(() {
+        _nameController.text = productData['name'] ?? '';
+        _descriptionController.text = productData['description'] ?? '';
+        _priceController.text = productData['price'].toString();
+        _itemsController.text = productData['items'].toString();
+        _existingImageUrl = productData['image'];
+        _selectedCategory = productData['category'];
+      });
+    }
+  }
 
+  Future<void> _pickImageFromGallery() async {
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
     setState(() {
       if (pickedFile != null) {
         _imageFile = File(pickedFile.path);
@@ -52,8 +77,7 @@ class _ProductAddState extends State<ProductAdd> {
   }
 
   Future<void> _pickImageFromCamera() async {
-    final pickedFile = await ImagePicker().getImage(source: ImageSource.camera);
-
+    final pickedFile = await ImagePicker().pickImage(source: ImageSource.camera);
     setState(() {
       if (pickedFile != null) {
         _imageFile = File(pickedFile.path);
@@ -61,52 +85,43 @@ class _ProductAddState extends State<ProductAdd> {
     });
   }
 
-  Future<void> _uploadImage() async {
-    if (_imageFile == null ||
-        _nameController.text.isEmpty ||
+  Future<void> _updateProduct() async {
+    if (_nameController.text.isEmpty ||
         _descriptionController.text.isEmpty ||
         _priceController.text.isEmpty ||
-        _quantityController.text.isEmpty) {
+        _itemsController.text.isEmpty ||
+        _selectedCategory == null) {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please fill all fields')));
       return;
     }
 
-    final ref = _storage.ref().child('productImage/${DateTime.now().millisecondsSinceEpoch}.jpg');
-    await ref.putFile(_imageFile!);
+    String imageUrl = _existingImageUrl ?? '';
 
-    final downloadUrl = await ref.getDownloadURL();
+    if (_imageFile != null) {
+      final ref = _storage.ref().child('productImage/${DateTime.now().millisecondsSinceEpoch}.jpg');
+      await ref.putFile(_imageFile!);
+      imageUrl = await ref.getDownloadURL();
+    }
 
-    // Retrieve values from text fields
     final String name = _nameController.text;
     final String description = _descriptionController.text;
     final String price = _priceController.text;
-    final String quantity = _quantityController.text;
+    final String quantity = _itemsController.text;
 
-    // Construct product data
     final Map<String, dynamic> productData = {
       'name': name,
       'description': description,
-      'price': price,
-      'quantity': quantity,
-      'image': downloadUrl.toString(),
-      'restaurantId': widget.restaurantId, // Include restaurantId in product data
+      'price': double.parse(price),
+      'items': int.parse(quantity),
+      'image': imageUrl,
+      'category': _selectedCategory,
     };
 
-    // Store product data in Firestore
-    DocumentReference productRef = await FirebaseFirestore.instance.collection('products').add(productData);
-    String productId = productRef.id; // Get the ID of the newly added product
-    productData['product_Id'] = productId; // Add the product ID to the product data
+    await FirebaseFirestore.instance.collection('products').doc(widget.productId).update(productData);
 
-    // Update product data in Firestore with the ID
-    await productRef.update(productData);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Product updated successfully')));
 
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Product uploaded successfully')));
-
-    // Check if all fields are filled and image is uploaded successfully
-    if (_imageFile != null && !_nameController.text.isEmpty && !_descriptionController.text.isEmpty && !_priceController.text.isEmpty && !_quantityController.text.isEmpty) {
-      // Navigate to HomePage or any other screen
-      Navigator.push(context, MaterialPageRoute(builder: (context) => HomePage()));
-    }
+    Navigator.pop(context);
   }
 
   @override
@@ -122,11 +137,8 @@ class _ProductAddState extends State<ProductAdd> {
               ),
             ),
           ),
-          title: Text("Product Add",textAlign: TextAlign.center,style: TextStyle(color: Colors.white),
-          ),
-          iconTheme: IconThemeData(
-            color: Colors.white, // Change the back icon color to white
-          ),
+          title: Text("Edit Product", textAlign: TextAlign.center, style: TextStyle(color: Colors.white)),
+          iconTheme: IconThemeData(color: Colors.white),
         ),
         body: SingleChildScrollView(
             child: Padding(
@@ -175,9 +187,14 @@ class _ProductAddState extends State<ProductAdd> {
                           image: FileImage(File(_imageFile!.path)),
                           fit: BoxFit.cover,
                         )
+                            : _existingImageUrl != null
+                            ? DecorationImage(
+                          image: NetworkImage(_existingImageUrl!),
+                          fit: BoxFit.cover,
+                        )
                             : null,
                       ),
-                      child: _imageFile == null
+                      child: _imageFile == null && _existingImageUrl == null
                           ? Icon(Icons.add_a_photo, size: 50, color: Colors.grey)
                           : null,
                     ),
@@ -209,12 +226,34 @@ class _ProductAddState extends State<ProductAdd> {
                   ),
                   SizedBox(height: 20),
                   TextField(
-                    controller: _quantityController,
+                    controller: _itemsController,
                     decoration: InputDecoration(
-                      labelText: 'Quantity',
+                      labelText: 'Items',
                       border: OutlineInputBorder(),
                     ),
                     keyboardType: TextInputType.number,
+                  ),
+                  SizedBox(height: 20),
+                  DropdownButtonFormField<String>(
+                    value: _selectedCategory,
+                    hint: Text('Select food category'),
+                    items: _categories.map((String category) {
+                      return DropdownMenuItem<String>(
+                        value: category,
+                        child: Text(category),
+                      );
+                    }).toList(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        _selectedCategory = newValue;
+                      });
+                    },
+                    decoration: InputDecoration(
+                      labelText: 'Category',
+                      border: OutlineInputBorder(),
+                    ),
+                    isExpanded: true,
+                    icon: Icon(Icons.arrow_drop_down, color: Colors.orange),
                   ),
                   SizedBox(height: 20),
                   Container(
@@ -222,14 +261,14 @@ class _ProductAddState extends State<ProductAdd> {
                     height: 45,
                     child: MaterialButton(
                       onPressed: () async {
-                        await _uploadImage();
+                        await _updateProduct();
                       },
                       color: Colors.orange,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8.0),
                       ),
                       child: Text(
-                        'Add Product',
+                        'Update Product',
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 16,
@@ -241,7 +280,7 @@ class _ProductAddState extends State<ProductAdd> {
                 ],
               ),
             ),
-            ),
-        );
+          ),
+      );
     }
 }

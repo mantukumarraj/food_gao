@@ -1,37 +1,33 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
-import 'package:foodgeo_partner/home_page.dart';
-import 'package:foodgeo_partner/views/screen/register_screen.dart';
-import 'dart:developer';
 import 'dart:async';
-import 'package:pinput/pinput.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/material.dart';
+import 'package:foodgeo_partner/views/screen/register_screen.dart';
+import 'package:pin_code_fields/pin_code_fields.dart';
 
-class Verify extends StatefulWidget {
-  final String verificationid;
+import '../../home_page.dart';
+
+class OtpScreen extends StatefulWidget {
   final String phoneNumber;
+  final String verificationId;
 
-  Verify({Key? key, required this.verificationid, required this.phoneNumber}) : super(key: key);
+  const OtpScreen({super.key, required this.phoneNumber, required this.verificationId});
 
   @override
-  State<Verify> createState() => _VerifyState();
+  _OtpScreenState createState() => _OtpScreenState();
 }
 
-class _VerifyState extends State<Verify> {
-  TextEditingController OtpController = TextEditingController();
+class _OtpScreenState extends State<OtpScreen> {
+  final int otpLength = 6;
   int resendCountdown = 30;
   late Timer _timer;
+  final TextEditingController _pinController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   void initState() {
     super.initState();
     startResendCountdown();
-  }
-
-  @override
-  void dispose() {
-    _timer.cancel();
-    super.dispose();
   }
 
   void startResendCountdown() {
@@ -46,146 +42,219 @@ class _VerifyState extends State<Verify> {
     });
   }
 
-  Future<void> verifyOtp(String otp) async {
+  @override
+  void dispose() {
+    _timer.cancel();
+    _pinController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _verifyOTP() async {
+    String otp = _pinController.text.trim();
+
+    if (otp.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Please enter the OTP")),
+      );
+      return;
+    }
+
     try {
       PhoneAuthCredential credential = PhoneAuthProvider.credential(
-        verificationId: widget.verificationid,
+        verificationId: widget.verificationId,
         smsCode: otp,
       );
 
-      UserCredential userCredential = await FirebaseAuth.instance.signInWithCredential(credential);
+      UserCredential userCredential = await _auth.signInWithCredential(credential);
+      User? user = userCredential.user;
 
-      // After verifying the OTP, check if the phone number is already registered in Firestore
-      bool phoneExists = await checkPhoneNumberInFirestore(widget.phoneNumber);
+      if (user != null) {
+        bool isFirstLogin = await _checkIfFirstLogin(user);
 
-      if (phoneExists) {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage()));
-      } else {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => RegistrationPage(phoneNumber: widget.phoneNumber)),
-        );
+        if (isFirstLogin) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => RegistrationPage(phoneNumber: widget.phoneNumber)),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomePage()),
+          );
+        }
       }
-    } catch (ex) {
-      log(ex.toString());
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("Invalid OTP. Please try again.")),
+      );
+      print('Error verifying OTP: $e');
     }
   }
 
-  Future<bool> checkPhoneNumberInFirestore(String phoneNumber) async {
+  Future<bool> _checkIfFirstLogin(User user) async {
     try {
-      QuerySnapshot querySnapshot = await FirebaseFirestore.instance
-          .collection("users")
-          .where('phoneNumber', isEqualTo: phoneNumber)
+      final DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
           .get();
 
-      return querySnapshot.docs.isNotEmpty;
-    } catch (error) {
-      log('Error checking phone number: $error');
-      return false;
+      if (userDoc.exists) {
+        return false; // User is registered
+      } else {
+        return true; // User is not registered
+      }
+    } catch (e) {
+      print('Error checking registration status: $e');
+      return true; // Assume the user is not registered if there's an error
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final defaultPinTheme = PinTheme(
-      width: 56,
-      height: 56,
-      textStyle: TextStyle(
-        fontSize: 20,
-        color: Color.fromRGBO(30, 60, 87, 1),
-        fontWeight: FontWeight.w600,
-      ),
-      decoration: BoxDecoration(
-        border: Border.all(color: Color.fromRGBO(234, 239, 243, 1)),
-        borderRadius: BorderRadius.circular(20),
-      ),
-    );
-
-    final mediaQuery = MediaQuery.of(context);
-    final height = mediaQuery.size.height;
-    final width = mediaQuery.size.width;
-    final padding = mediaQuery.padding;
-    final safeAreaHeight = height - padding.top - padding.bottom;
-
     return Scaffold(
-      appBar: AppBar(
-        title: Text('OTP VERIFICATION'),
-        backgroundColor: Colors.orange,
-      ),
-      backgroundColor: Colors.white,
-      body: Padding(
-        padding: EdgeInsets.symmetric(horizontal: width * 0.05),
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              SizedBox(height: safeAreaHeight * 0.1),
-              Container(
-                width: width * 1.0,
-                height: height * 0.3,
-                padding: EdgeInsets.all(18.0),
-                color: Colors.black,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "Verify Your Phone Number",
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.orange,
-                      ),
-                      textAlign: TextAlign.center,
+      body: Container(
+        width: double.infinity,
+        height: MediaQuery.of(context).size.height,
+        child: Stack(
+          children: [
+            // Yellow container
+            Container(
+              width: double.infinity,
+              height: 400,
+              decoration: BoxDecoration(
+                color: Colors.orange,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(30),
+                  topRight: Radius.circular(30),
+                ),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.phonelink_lock,
+                    size: 50,
+                    color: Colors.white,
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    "OTP",
+                    style: TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.white,
                     ),
-                    SizedBox(height: safeAreaHeight * 0.01),
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    "Please enter the OTP sent to your mobile number",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // White container overlapping the yellow container
+            Positioned(
+              top: 330,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: 470,
+                padding: EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(50),
+                  ),
+                ),
+                child: Column(
+                  children: [
+                    SizedBox(height: 20),
                     Text(
-                      'We have sent a verification code to ${widget.phoneNumber}',
-                      style: TextStyle(color: Colors.grey),
-                      textAlign: TextAlign.center,
+                      'Verify OTP',
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 30),
+                    PinCodeTextField(
+                      appContext: context,
+                      length: otpLength,
+                      controller: _pinController,
+                      keyboardType: TextInputType.number,
+                      textStyle: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                      animationType: AnimationType.fade,
+                      pinTheme: PinTheme(
+                        shape: PinCodeFieldShape.box,
+                        borderRadius: BorderRadius.circular(8),
+                        fieldHeight: 50,
+                        fieldWidth: 50,
+                        activeFillColor: Colors.white,
+                        selectedFillColor: Colors.white,
+                        inactiveFillColor: Colors.white,
+                        activeColor: Colors.grey,
+                        selectedColor: Colors.orange,
+                        inactiveColor: Colors.grey,
+                      ),
+                      onChanged: (value) {
+                        print(value);
+                      },
+                      onCompleted: (value) {
+                        print("Entered OTP: $value");
+                      },
+                    ),
+                    SizedBox(height: 20),
+                    Text(
+                      "Didn’t receive an OTP?",
+                      style: TextStyle(
+                        color: Colors.grey,
+                      ),
+                    ),
+                    SizedBox(height: 5),
+                    Text(
+                      "Resend OTP",
+                      style: TextStyle(
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(height: 30),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          _verifyOTP();
+                        },
+                        style: ElevatedButton.styleFrom(
+                          padding: EdgeInsets.all(15),
+                          backgroundColor: Colors.orange,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                        ),
+                        child: Text(
+                          "Submit",
+                          style: TextStyle(
+                            fontSize: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),
               ),
-              SizedBox(height: safeAreaHeight * 0.07),
-              Pinput(
-                length: 6,
-                showCursor: true,
-                onCompleted: (pin) => verifyOtp(pin),
-                controller: OtpController,
-                defaultPinTheme: defaultPinTheme,
-              ),
-              SizedBox(height: 20),
-              Text(
-                'Resend code in $resendCountdown seconds',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: resendCountdown == 0 ? Colors.red : Colors.black,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              SizedBox(height: 20),
-              Container(
-                width: double.infinity,
-                height: MediaQuery.of(context).size.height / 16,
-                child: MaterialButton(
-                  onPressed: () {
-                    verifyOtp(OtpController.text.toString());
-                  },
-                  color: Colors.orange,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8.0),
-                  ),
-                  child: Text(
-                    'VERIFY OTP',
-                    style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 15,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );

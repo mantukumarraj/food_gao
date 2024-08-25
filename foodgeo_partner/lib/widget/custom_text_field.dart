@@ -1,3 +1,4 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -14,7 +15,7 @@ class CustomTextField extends StatelessWidget {
     required this.icon,
     required this.controller,
     this.keyboardType = TextInputType.text,
-    this.inputFormatters,
+    this.inputFormatters, required String? Function(dynamic value) validator,
   }) : super(key: key);
 
   @override

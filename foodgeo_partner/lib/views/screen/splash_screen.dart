@@ -48,7 +48,7 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
   void _navigateBasedOnAuthState(User? user) {
     if (user == null) {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => PhoneAuth()));
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => PhoneAuthView()));
     } else {
       Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (_) => HomePage()));
     }

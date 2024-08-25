@@ -1,8 +1,8 @@
 import 'dart:io';
+import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:flutter/cupertino.dart';
 
 class RegistrationController {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -10,36 +10,43 @@ class RegistrationController {
   final FirebaseStorage _storage = FirebaseStorage.instance;
   final TextEditingController nameController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
+  final TextEditingController emailController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
-  Future<void> registerUser(String gender, File image,String phoneNumber) async {
+  Future<User?> registerUser(String gender, File image, String phoneNumber) async {
     String name = nameController.text.trim();
     String address = addressController.text.trim();
+    String email = emailController.text.trim();
+    String password = passwordController.text.trim();
 
-    if (name.isEmpty || address.isEmpty) {
+    if (name.isEmpty || address.isEmpty || email.isEmpty || password.isEmpty) {
       throw Exception("All fields are required.");
     }
 
-    User? user = _auth.currentUser;
-
-    if (user == null) {
-      throw Exception("No user is currently logged in.");
-    }
-
     try {
-      String uid = user.uid;
-      String imageUrl = await _uploadImage(uid, image);
+      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(email: email, password: password);
+      User? user = userCredential.user;
 
-      await _firestore.collection('users').doc(uid).set({
-        'name': name,
-        'address': address,
-        'gender': gender,
-        'imageUrl': imageUrl,
-        'uid': uid,
-        'phone':phoneNumber
-      });
+      if (user != null) {
+        String uid = user.uid;
+        String imageUrl = await _uploadImage(uid, image);
+
+        await _firestore.collection('Restaurant users').doc(uid).set({
+          'name': name,
+          'address': address,
+          'email': email,
+          'gender': gender,
+          'imageUrl': imageUrl,
+          'uid': uid,
+        });
+
+        return user;
+      }
     } catch (e) {
       throw Exception("Registration failed with error: $e");
     }
+
+    return null;
   }
 
   Future<String> _uploadImage(String uid, File image) async {
@@ -56,5 +63,7 @@ class RegistrationController {
   void dispose() {
     nameController.dispose();
     addressController.dispose();
-  }
+    emailController.dispose();
+    passwordController.dispose();
+   }
 }

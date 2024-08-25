@@ -1,137 +1,170 @@
 import 'package:flutter/material.dart';
+import 'package:foodgeo_partner/views/screen/phone_verification_screen.dart';
+import 'package:foodgeo_partner/views/screen/restaurant_register_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:foodgeo_partner/home_page.dart';
 
-class ProfilePage extends StatelessWidget {
+class ProfileScreen extends StatefulWidget {
+  const ProfileScreen({Key? key}) : super(key: key);
+
+  @override
+  _ProfileScreenState createState() => _ProfileScreenState();
+}
+
+class _ProfileScreenState extends State<ProfileScreen> {
+  bool switchValue = true;
+  String? userName;
+  String? userProfileImage;
+
+  User? get _currentUser => FirebaseAuth.instance.currentUser;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
+    if (_currentUser != null) {
+      try {
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(_currentUser!.uid)
+            .get();
+        setState(() {
+          userName = userDoc['name']; // Fetch user's name
+          userProfileImage = userDoc['imageUrl']; // Fetch user's profile image URL
+        });
+      } catch (e) {
+        print('Error fetching user data: $e');
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          onPressed: () {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage()));
-          },
-          icon: Icon(Icons.arrow_back),
-        ),
-        title: Text('Profile'),
-        backgroundColor: Colors.orange, // Set AppBar color to orange
-      ),
-      body: FutureBuilder<DocumentSnapshot>(
-        future: _fetchUserProfile(),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-
-          if (!snapshot.hasData || !snapshot.data!.exists) {
-            return Center(child: Text('No profile data available.'));
-          }
-
-          var data = snapshot.data!.data() as Map<String, dynamic>;
-
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Card(
-                elevation: 4,
-                child: SizedBox(
-                  width: 300, // Adjust card width
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        CircleAvatar(
-                          radius: 80,
-                          backgroundImage: NetworkImage(data['imageUrl'] ?? ''),
-                          backgroundColor: Colors.grey[200],
-                        ),
-                        SizedBox(height: 16),
-                        Text(
-                          'Name: ${data['name'] ?? 'N/A'}',
-                          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-                          textAlign: TextAlign.center,
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'Address: ${data['address'] ?? 'N/A'}',
-                          style: TextStyle(fontSize: 18),
-                          textAlign: TextAlign.center,
-                        ),
-                        SizedBox(height: 8),
-                        Text(
-                          'Gender: ${data['gender'] ?? 'N/A'}',
-                          style: TextStyle(fontSize: 18),
-                          textAlign: TextAlign.center,
-                        ),
-                        SizedBox(height: 16),
-                        if (data.containsKey('ownerName')) ...[
-                          Divider(thickness: 2),
-                          SizedBox(height: 16),
-                          Text(
-                            'Owner Name: ${data['ownerName'] ?? 'N/A'}',
-                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Location: ${data['location'] ?? 'N/A'}',
-                            style: TextStyle(fontSize: 18),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Description: ${data['description'] ?? 'N/A'}',
-                            style: TextStyle(fontSize: 18),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: 8),
-                          Text(
-                            'Category: ${data['category'] ?? 'N/A'}',
-                            style: TextStyle(fontSize: 18),
-                            textAlign: TextAlign.center,
-                          ),
-                          SizedBox(height: 16),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage()));
-                            },
-                            child: Text("Go Back!"),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
+      backgroundColor: Colors.white,
+      body: Column(
+        children: [
+          // Header section
+          Container(
+            width: double.infinity,
+            height: 260,
+            decoration: const BoxDecoration(
+              color: Color(0xFFFFA726),
+              borderRadius: BorderRadius.only(
+                bottomLeft: Radius.circular(100),
               ),
             ),
-          );
-        },
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                CircleAvatar(
+                  radius: 50,
+                  backgroundColor: Colors.white,
+                  backgroundImage: userProfileImage != null
+                      ? NetworkImage(userProfileImage!)
+                      : null, // Use user's profile image or show an icon if null
+                  child: userProfileImage == null
+                      ? const Icon(Icons.person, size: 50, color: Color(0xFFFFA726))
+                      : null,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  userName ?? 'Loading...', // Show user's name or "Loading..." while data is fetched
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Menu items
+          Expanded(
+            child: ListView(
+              children: [
+                _buildMenuItem(Icons.person, 'My Profile', () {
+                  // Navigate to My Profile Screen
+                }),
+                _buildMenuItem(Icons.restaurant_menu, 'Register Your Restaurant', () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>  RestaurantRegistrationPage(),
+                    ),
+                  );
+                }),
+                _buildMenuItem(Icons.receipt, 'Orders', () {
+                  // Navigate to Orders Screen
+                }),
+                _buildMenuItem(Icons.settings, 'Settings', () {
+                  // Navigate to Settings Screen
+                }),
+                const Divider(),
+                _buildMenuItem(Icons.exit_to_app, 'Logout', () {
+                  _showLogoutDialog(context);
+                }),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
-  Future<DocumentSnapshot> _fetchUserProfile() async {
-    User? user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      throw Exception("No user logged in.");
-    }
+  Widget _buildMenuItem(IconData icon, String title, [VoidCallback? onTap]) {
+    return ListTile(
+      leading: Icon(icon, color: Colors.black87),
+      title: Text(
+        title,
+        style: const TextStyle(fontSize: 18, color: Colors.black87),
+      ),
+      onTap: onTap ?? () {},
+    );
+  }
 
-    DocumentReference docRef;
-    if (user.email != null && user.email!.contains('@restaurant.com')) {
-      // For restaurant users
-      docRef = FirebaseFirestore.instance.collection('restaurants').doc(user.uid);
-    } else {
-      // For regular users
-      docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
-    }
-
-    return docRef.get();
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text(
+            "Are you sure you want to logout?",
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () async {
+                await FirebaseAuth.instance.signOut();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) =>  PhoneAuthView(),
+                  ),
+                );
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text("You have logged out")),
+                );
+              },
+              child: const Text("Logout"),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text("Cancel"),
+            ),
+          ],
+        );
+      },
+    );
   }
 }
