@@ -58,11 +58,9 @@
       },
       "oauth_client": [
         {
-          "client_id": "833025637450-cip47bbudgnb03g16d8o7h9s6hqi1l7d.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.food_gao_delevery_partner",
-            "certificate_hash": "4581623110d9290f8e0f6eb011d40edcdd061051"
           }
         },
         {
@@ -102,11 +100,9 @@
       },
       "oauth_client": [
         {
-          "client_id": "833025637450-i2k71i7a1nauvcid43ia8i7r7799go0s.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.example.foodgeo_partner",
-            "certificate_hash": "fa89eac83ba0d51e6bf74f13971413937e9afa0e"
           }
         },
         {

@@ -1,8 +1,99 @@
+// import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'package:flutter/material.dart';
+// import 'package:foodgeo_partner/views/screen/home_page.dart';
+// import 'package:uuid/uuid.dart';
+//
+// class RestaurantVerificationScreen extends StatefulWidget {
+//   const RestaurantVerificationScreen({super.key});
+//
+//   @override
+//   State<RestaurantVerificationScreen> createState() =>
+//       _RestaurantVerificationScreenState();
+// }
+//
+// class _RestaurantVerificationScreenState
+//     extends State<RestaurantVerificationScreen> {
+//   String uuid = Uuid().v4();
+//   bool isRegistered = false;
+//   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+//
+//   // Variable to store the 'name' value
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         backgroundColor: Colors.orangeAccent,
+//       ),
+//       body: Center(
+//         child: Column(
+//           children: [
+//             SizedBox(
+//               height: 50,
+//             ),
+//             Center(
+//                 child: Text("Verify Restaurant ",
+//                     style:
+//                         TextStyle(fontWeight: FontWeight.bold, fontSize: 25))),
+//             SizedBox(
+//               height: 50,
+//             ),
+//             Image.network(
+//                 "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQiocuPPGmSUZC6IIOWC1SDmCeMdMLYt2qbqQ&s",
+//                 fit: BoxFit.fill),
+//             SizedBox(height: 50),
+//             StreamBuilder<DocumentSnapshot>(
+//               stream:
+//                   _firestore.collection("restaurants").doc(uuid).snapshots(),
+//               builder: (context, snapshot) {
+//                 if (snapshot.connectionState == ConnectionState.waiting) {
+//                   return Center(
+//                     child: CircularProgressIndicator(),
+//                   );
+//                 } else if (snapshot.hasError) {
+//                   return Center(
+//                     child: Text("Error: ${snapshot.error}"),
+//                   );
+//                 } else if (!snapshot.hasData || !snapshot.data!.exists) {
+//                   return Center(
+//                     child: Text("No Data",
+//                         style: TextStyle(
+//                             fontSize: 25, fontWeight: FontWeight.bold)),
+//                   );
+//                 } else {
+//                   var data = snapshot.data!.data() as Map<String, dynamic>;
+//                   isRegistered = data['name'];
+//                   return isRegistered
+//                       ? TextButton(
+//                           onPressed: () {
+//                             ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+//                                 content: Text(
+//                                     "Restaurant not registerd wait for one weak")));
+//                           },
+//                           child: Text("Not restaurant registerd"))
+//                       : TextButton(
+//                           onPressed: () {
+//                             Navigator.pushReplacement(
+//                                 context,
+//                                 MaterialPageRoute(
+//                                     builder: (context) => HomePage()));
+//                           },
+//                           child: Text(" Registerd restaurant"));
+//                   //   Text(
+//                   //   isRegistered ? "User Registered" : "User Not Registered",
+//                   // );
+//                 }
+//               },
+//             ),
+//           ],
+//         ),
+//       ),
+//     );
+//   }
+// }
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:foodgeo_partner/home_page.dart';
-
+import 'package:foodgeo_partner/views/screen/home_screen.dart';
 class RestaurantVerificationScreen extends StatefulWidget {
   const RestaurantVerificationScreen({super.key});
 
@@ -17,7 +108,6 @@ class _RestaurantVerificationScreenState
   final FirebaseAuth _auth = FirebaseAuth.instance;
   bool isRegistered = false;
   bool isVerified = false;
-  String? restaurantImageUrl;
 
   @override
   Widget build(BuildContext context) {
@@ -28,8 +118,7 @@ class _RestaurantVerificationScreenState
         backgroundColor: Colors.orangeAccent,
       ),
       body: Center(
-        child: ListView(
-          padding: EdgeInsets.all(16.0),
+        child: Column(
           children: [
             SizedBox(height: 50),
             Center(
@@ -39,27 +128,14 @@ class _RestaurantVerificationScreenState
               ),
             ),
             SizedBox(height: 50),
-            restaurantImageUrl != null
-                ? Container(
-              width: MediaQuery.of(context).size.width * 0.8, // 80% of screen width
-              height: MediaQuery.of(context).size.width * 0.8, // 80% of screen width (for square image)
-              child: Image.network(
-                restaurantImageUrl!,
-                fit: BoxFit.cover,
-              ),
-            )
-                : Container(
-              width: MediaQuery.of(context).size.width * 0.17,
-              height: MediaQuery.of(context).size.width * 0.17,
-              child: CircularProgressIndicator(),
+            Image.network(
+              "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQiocuPPGmSUZC6IIOWC1SDmCeMdMLYt2qbqQ&s",
+              fit: BoxFit.fill,
             ),
             SizedBox(height: 50),
             if (user != null)
               StreamBuilder<DocumentSnapshot>(
-                stream: _firestore
-                    .collection("restaurants")
-                    .doc(user.uid)
-                    .snapshots(),
+                stream: _firestore.collection("restaurants").doc(user.uid).snapshots(),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return Center(
@@ -73,32 +149,25 @@ class _RestaurantVerificationScreenState
                     return Center(
                       child: Text(
                         "No Data",
-                        style: TextStyle(
-                            fontSize: 25, fontWeight: FontWeight.bold),
+                        style: TextStyle(fontSize: 25, fontWeight: FontWeight.bold),
                       ),
                     );
                   } else {
                     var data = snapshot.data!.data() as Map<String, dynamic>;
-                    isRegistered = data.containsKey('name') &&
-                        data['name'].isNotEmpty;
+                    isRegistered = data.containsKey('name') && data['name'].isNotEmpty;
                     isVerified = data['verification'] ?? false;
-                    restaurantImageUrl = data['imageUrl'];
 
                     return Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
                           isRegistered
                               ? "Restaurant Registered"
                               : "Restaurant Not Registered",
-                          style: TextStyle(
-                              fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                         SizedBox(height: 20),
                         Text(
-                          isVerified
-                              ? "Restaurant Verified"
-                              : "Waiting for Verification",
+                          isVerified ? "Restaurant Verified" : "Waiting for Verification",
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -109,10 +178,7 @@ class _RestaurantVerificationScreenState
                         isRegistered && isVerified
                             ? TextButton(
                           onPressed: () {
-                            Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (context) => HomePage()));
+                            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePageScreen(),));
                           },
                           child: Text("Go to Home"),
                         )
@@ -128,14 +194,6 @@ class _RestaurantVerificationScreenState
                           },
                           child: Text("Not Verified"),
                         ),
-                        TextButton(
-                            onPressed: () {
-                              Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (context) => HomePage()));
-                            },
-                            child: Text("Go back")),
                       ],
                     );
                   }

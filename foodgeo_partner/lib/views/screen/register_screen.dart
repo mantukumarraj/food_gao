@@ -4,7 +4,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import '../../home_page.dart';
+import 'home_page.dart'; // Adjust the path as needed
 
 class RegistrationPage extends StatefulWidget {
   final String phoneNumber;
@@ -159,204 +159,180 @@ class _RegistrationPageState extends State<RegistrationPage> {
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final screenHeight = mediaQuery.size.height;
+    final screenWidth = mediaQuery.size.width;
+
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          children: [
-            // Orange container
-            Container(
-              width: double.infinity,
-              height: 350,
-              decoration: const BoxDecoration(
-                color: Colors.orange,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Stack(
-                    children: [
-                      CircleAvatar(
-                        radius: 50,
-                        backgroundColor: Colors.grey,
-                        backgroundImage: _imageFile != null
-                            ? FileImage(_imageFile!)
-                            : null,
-                        child: _imageFile == null
-                            ? const Icon(
-                          Icons.person,
-                          size: 50,
-                          color: Colors.white,
-                        )
-                            : null,
-                      ),
-                      Positioned(
-                        bottom: 0,
-                        right: 0,
-                        child: GestureDetector(
-                          onTap: _showImageOptions,
-                          child: const CircleAvatar(
-                            radius: 15,
-                            backgroundColor: Colors.white,
-                            child: Icon(
-                              Icons.edit,
-                              color: Colors.black,
-                              size: 15,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 30),
-                  const Text(
-                    "Please fill in the details below",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+      body: Stack(
+        children: [
+          Container(
+            height: double.infinity,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFFFA726), Color(0xFF424242)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
             ),
-            // White container overlapping the orange container
-            Container(
-              transform: Matrix4.translationValues(0.0, -60.0, 0.0),
-              padding: const EdgeInsets.all(20),
-              decoration: const BoxDecoration(
+          ),
+          Padding(
+            padding: EdgeInsets.only(top: screenHeight * 0.1),
+            child: Container(
+              height: screenHeight * 0.9,
+              width: double.infinity,
+              decoration: BoxDecoration(
                 color: Colors.white,
                 borderRadius: BorderRadius.only(
-                  topLeft: Radius.circular(70),
+                  topLeft: Radius.circular(40),
+                  topRight: Radius.circular(40),
                 ),
               ),
-              child: Column(
-                children: [
-                  const SizedBox(height: 20),
-                  const Text(
-                    'Personal Details',
-                    style: TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 30),
-                  TextFormField(
-                    controller: _nameController,
-                    decoration: InputDecoration(
-                      labelText: "Name",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.grey),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.grey),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                            color: Colors.orange, width: 1.0),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  TextFormField(
-                    controller: _ageController,
-                    decoration: InputDecoration(
-                      labelText: "Age",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.grey),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.grey),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                            color: Colors.orange, width: 1.0),
-                      ),
-                    ),
-                    keyboardType: TextInputType.number,
-                  ),
-                  const SizedBox(height: 20),
-                  DropdownButtonFormField<String>(
-                    value: _selectedGender,
-                    items: ['Male', 'Female', 'Other']
-                        .map((label) => DropdownMenuItem(
-                      value: label,
-                      child: Text(label),
-                    ))
-                        .toList(),
-                    decoration: InputDecoration(
-                      labelText: 'Gender',
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.grey),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.grey),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                            color: Colors.orange, width: 1.0),
-                      ),
-                    ),
-                    onChanged: (value) {
-                      setState(() {
-                        _selectedGender = value;
-                      });
-                    },
-                    hint: const Text('Select Gender'),
-                  ),
-                  const SizedBox(height: 20),
-                  TextFormField(
-                    controller: _addressController,
-                    decoration: InputDecoration(
-                      labelText: "Address",
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.grey),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Colors.grey),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(
-                            color: Colors.orange, width: 1.0),
-                      ),
-                    ),
-
-                  ),
-                  const SizedBox(height: 30),
-                  ElevatedButton(
-                    onPressed: _submitDetails,
-                    child: Text(
-                      'Submit',
+              child: SingleChildScrollView(
+                padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05, vertical: screenHeight * 0.02),
+                child: Column(
+                  children: [
+                    SizedBox(height: screenHeight * 0.02),
+                    Text(
+                      "Register",
                       style: TextStyle(
-                        color: Colors.white,
+                        fontSize: screenHeight * 0.04,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0xFF424242),
                       ),
                     ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      minimumSize: Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
+                    SizedBox(height: screenHeight * 0.02),
+                    ImagePickerWidget(
+                      onImagePicked: (image) {
+                        _selectedImage = image;
+                      },
+                    ),
+                    SizedBox(height: screenHeight * 0.03),
+                    CustomTextField(
+                      labelText: "Name",
+                      icon: Icons.person,
+                      controller: _controller.nameController,
+                    ),
+                    SizedBox(height: screenHeight * 0.02),
+                    CustomTextField(
+                      labelText: "Address",
+                      icon: Icons.location_on,
+                      controller: _controller.addressController,
+                    ),
+                    SizedBox(height: screenHeight * 0.02),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Radio<String>(
+                                value: 'Male',
+                                groupValue: _selectedGender,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedGender = value!;
+                                  });
+                                },
+                              ),
+                              Text('Male'),
+                            ],
+                          ),
+                        ),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Radio<String>(
+                                value: 'Female',
+                                groupValue: _selectedGender,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _selectedGender = value!;
+                                  });
+                                },
+                              ),
+                              Text('Female'),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    SizedBox(height: screenHeight * 0.02),
+                    CustomTextField(
+                      labelText: "Email",
+                      icon: Icons.email,
+                      controller: _controller.emailController,
+                    ),
+                    SizedBox(height: screenHeight * 0.02),
+                    CustomTextField(
+                      labelText: "Password",
+                      icon: Icons.lock,
+                      controller: _controller.passwordController,
+                      obscureText: true,
+                    ),
+                    SizedBox(height: screenHeight * 0.03),
+                    if (_errorMessage != null)
+                      Padding(
+                        padding: EdgeInsets.only(bottom: screenHeight * 0.02),
+                        child: Text(
+                          _errorMessage!,
+                          style: TextStyle(color: Colors.red),
+                        ),
+                      ),
+                    if (_isLoading)
+                      CircularProgressIndicator(),
+                    if (!_isLoading)
+                      CustomButton(
+                        text: "Register",
+                        onPressed: () async {
+                          setState(() {
+                            _isLoading = true;
+                            _errorMessage = null;
+                          });
+                          try {
+                            if (_selectedImage == null) {
+                              throw Exception("Please select an image.");
+                            }
+                            await _controller.registerUser(_selectedGender, _selectedImage!);
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(builder: (context) => PhoneVerificationScreen()),
+                            );
+                          } catch (e) {
+                            setState(() {
+                              _errorMessage = e.toString();
+                            });
+                          } finally {
+                            setState(() {
+                              _isLoading = false;
+                            });
+                          }
+                        },
+                        height: screenHeight * 0.07,
+                        width: screenWidth * 0.8,
+                      ),
+                    SizedBox(height: screenHeight * 0.05),
+                    TextButton(
+                      onPressed: () {
+                        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginScreen()));
+                      },
+                      child: Text(
+                        "Already have an account? Sign in",
+                        style: TextStyle(
+                          color: Colors.grey,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
-                  )
-                ],
+                  ],
+                ),
               ),
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
+

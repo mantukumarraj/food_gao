@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:foodgeo_partner/views/screen/restaurant_edit_screen.dart';
-
+import 'package:foodgeo_partner/views/screen/restaurant_Edit_Screen.dart';
 import '../../controller/restaurant_registration_controller.dart';
-import 'add_product.dart';
+import '../../product/product_add.dart';
+import '../../product/product_list_screen.dart';
 
 class RestaurantListScreen extends StatefulWidget {
   @override
@@ -61,21 +61,10 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
   Future<void> _deleteRestaurant(String restaurantId) async {
     try {
       // Call the delete method from your controller
-      // await _controller.deleteRestaurant(restaurantId);
       setState(() {
         _restaurantsFuture = _controller.getUserRestaurants(); // Refresh the list
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Restaurant deleted successfully."),
-        ),
-      );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Failed to delete restaurant: ${e.toString()}"),
-        ),
-      );
     }
   }
 

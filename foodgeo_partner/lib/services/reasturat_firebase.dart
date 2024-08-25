@@ -1,48 +1,24 @@
-import 'dart:io';
-import 'package:firebase_storage/firebase_storage.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class FirebaseServiceRestaurant {
-  final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  Future<String?> uploadImageToFirebase(File image, String uid) async {
-    try {
-      String fileName = DateTime.now().millisecondsSinceEpoch.toString();
-      Reference reference = FirebaseStorage.instance.ref().child('restaurants/$uid/$fileName');
-      UploadTask uploadTask = reference.putFile(image);
-      TaskSnapshot taskSnapshot = await uploadTask;
-      return await taskSnapshot.ref.getDownloadURL();
-    } catch (e) {
-      print(e);
-      return null;
+  Future<List<Map<String, dynamic>>> getUserRestaurants() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      throw Exception("No user logged in.");
     }
-  }
 
-  Future<void> registerRestaurant({
-    required String restaurantName,
-    required String location,
-    required String ownerName,
-    required String pincode,
-    required File image,
-  }) async {
-    User? user = _auth.currentUser;
-    if (user != null) {
-      String uid = user.uid;
-      String? imageUrl = await uploadImageToFirebase(image, uid);
+    final querySnapshot = await _firestore
+        .collection('restaurants')
+        .where('restaurantid', isEqualTo: user.uid)
+        .get();
 
-      if (imageUrl != null) {
-        await _firestore.collection('restaurants user').doc(uid).set({
-          'restaurantName': restaurantName,
-          'location': location,
-          'ownerName': ownerName,
-          'pincode': pincode,
-          'imageUrl': imageUrl,
-          'uid': uid,
-          'timestamp': FieldValue.serverTimestamp(),
-        });
-      }
-    }
+    final restaurants = querySnapshot.docs.map((doc) => {
+      ...doc.data(),
+      'id': doc.id, // Include document ID
+    }).toList();
+    return restaurants;
   }
 }

@@ -2,8 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:foodgeo_partner/views/screen/register_screen.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
-import 'otp_verfication_screen.dart';
-
+import 'otpverification_screen.dart';
 
 class PhoneAuthView extends StatefulWidget {
   @override
@@ -68,131 +67,108 @@ class _OtpScreenState extends State<PhoneAuthView> {
 
   @override
   Widget build(BuildContext context) {
+    final mediaQuery = MediaQuery.of(context);
+    final screenHeight = mediaQuery.size.height;
+    final screenWidth = mediaQuery.size.width;
+
     return Scaffold(
-        body: Container(
+      body: Stack(
+        children: [
+          Container(
+            height: double.infinity,
             width: double.infinity,
-            height: MediaQuery.of(context).size.height,
-            child: Stack(
-              children: [
-                // Yellow container
-                Container(
-                  width: double.infinity,
-                  height: 400,
-                  decoration: BoxDecoration(
-                    color: Colors.orange,
-                    borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(30),
-                      topRight: Radius.circular(30),
-                    ),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Image.asset('assets/Images/phoneicon.png',color: Colors.white,width: 60,height: 100,),
-                      SizedBox(height: 10),
-                      Text(
-                        "MOBILE PHONE",
-                        style: TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        "We need to Send OTP to authenticate your mobile",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Color(0xFFFFA726), Color(0xFF424242)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+            child: Padding(
+              padding: EdgeInsets.only(top: screenHeight * 0.08, left: screenWidth * 0.06),
+              child: Text(
+                "Phone Verification",
+                style: TextStyle(
+                  fontSize: screenHeight * 0.04,
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
                 ),
-                // White container overlapping the yellow container
-                Positioned(
-                  top: 330,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    height: 470,
-                    padding: EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(50),
-                      ),
-                    ),
-                    child: Column(
-                      children: [
-                        SizedBox(height: 20),
-                        Text(
-                          'Verify Number',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        SizedBox(height: 30),
-                        Container(
-                          margin: EdgeInsets.only(left: 18, right: 18),
-                          child: IntlPhoneField(
-                            decoration: InputDecoration(
-                              labelText: 'Phone Number',
-                              border: OutlineInputBorder(
-                                borderSide: BorderSide(),
-                              ),
-                            ),
-                            initialCountryCode: 'IN', // Set the initial country code
-                            onChanged: (phone) {
-                              setState(() {
-                                phoneNumber = phone.completeNumber;
-                              });
-                            },
-                          ),
-                        ),
-                        SizedBox(height: 30),
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: () {
-                              if (phoneNumber.isNotEmpty) {
-                                _verifyPhoneNumber();
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text("Please enter a phone number.")),
-                                );
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              padding: EdgeInsets.all(15),
-                              backgroundColor: Colors.orange,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                            ),
-                            child: isLoading
-                                ? CircularProgressIndicator(
-                              color: Colors.white,
-                            )
-                                : Text(
-                              "Continue",
-                              style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
-        );
-    }
+          Padding(
+            padding: EdgeInsets.only(top: screenHeight * 0.25),
+            child: Container(
+              height: screenHeight * 0.75,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(40),
+                  topRight: Radius.circular(40),
+                ),
+              ),
+              child: Stack(
+                children: [
+                  SingleChildScrollView(
+                    child: Padding(
+                      padding: EdgeInsets.symmetric(horizontal: screenWidth * 0.05, vertical: screenHeight * 0.05),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (!_isOtpSent) ...[
+                            IntlPhoneField(
+                              decoration: InputDecoration(
+                                labelText: 'Phone Number',
+                                border: OutlineInputBorder(
+                                  borderSide: BorderSide(),
+                                ),
+                              ),
+                              initialCountryCode: 'IN',
+                              onChanged: (phone) {
+                                number = phone;
+                              },
+                            ),
+                            SizedBox(height: screenHeight * 0.03),
+                            CustomButton(
+                              text: "Send OTP",
+                              onPressed: _sendOtp,
+                              height: screenHeight * 0.07,
+                              width: screenWidth * 0.8,
+                            ),
+                          ] else ...[
+                            Center(
+                              child: CustomTextField(
+                                labelText: "OTP",
+                                icon: Icons.lock,
+                                controller: otpController,
+                              )
+                            )
+                            ,
+                            SizedBox(height: screenHeight * 0.03),
+                            CustomButton(
+                              text: "Verify OTP",
+                              onPressed: _verifyOtp,
+                              height: screenHeight * 0.07,
+                              width: screenWidth * 0.8,
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                  if (_isLoading)
+                    Center(
+                      child: CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 }
