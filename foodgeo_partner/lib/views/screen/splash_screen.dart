@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:foodgeo_partner/views/screen/home_page.dart';
 import 'package:foodgeo_partner/views/screen/phone_verification_screen.dart';
+import 'package:foodgeo_partner/views/screen/register_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -13,18 +15,28 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-
-    Timer(Duration(seconds: 3), () {
-      // Check if the user is authenticated
+    Timer(Duration(seconds: 3), () async {
       User? user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        // If the user is authenticated, navigate to Home Page
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) =>  HomePage()),
-        );
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('partners')
+            .doc(user.uid)
+            .get();
+        if (userDoc.exists) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomePage()),
+          );
+        } else {
+          String? phoneNumber = user.phoneNumber ?? '';
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RegistrationPage(phoneNumber: phoneNumber),
+            ),
+          );
+        }
       } else {
-        // If the user is not authenticated, navigate to PhoneAuthView
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => PhoneAuthView()),
@@ -36,35 +48,35 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        body: Container(
-            decoration: BoxDecoration(
-              color: Colors.orange, // Background color
-            ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'FoodGao',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 50,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  Text(
-                    'Carbon and Plastic Neutral\nDeliveries in India',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+      body: Container(
+        decoration: BoxDecoration(
+          color: Colors.orange,
         ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                'FoodGao',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 50,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                'Carbon and Plastic Neutral\nDeliveries in India',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

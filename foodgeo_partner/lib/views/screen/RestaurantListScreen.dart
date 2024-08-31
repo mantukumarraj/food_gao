@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:foodgeo_partner/views/screen/restaurant_Edit_Screen.dart';
+import 'package:foodgeo_partner/views/screen/restaurant_register_screen.dart';
 import '../../controller/restaurant_registration_controller.dart';
 import '../../product/product_add.dart';
 import '../../product/product_list_screen.dart';
@@ -28,7 +29,15 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
     );
   }
 
-  // Show delete confirmation dialog
+  void _navigateToProductList(BuildContext context, String restaurantId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProductListScreen(restaurantId: restaurantId),
+      ),
+    );
+  }
+
   void _showDeleteConfirmationDialog(BuildContext context, String restaurantId) {
     showDialog(
       context: context,
@@ -40,14 +49,13 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
             TextButton(
               child: Text('Cancel'),
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
               },
             ),
             TextButton(
               child: Text('Delete'),
               onPressed: () async {
-                Navigator.of(context).pop(); // Close the dialog
-                // Call delete function
+                Navigator.of(context).pop();
                 await _deleteRestaurant(restaurantId);
               },
             ),
@@ -57,13 +65,11 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
     );
   }
 
-  // Function to delete restaurant
   Future<void> _deleteRestaurant(String restaurantId) async {
     try {
-      // Call the delete method from your controller
       await _controller.deleteRestaurant(restaurantId);
       setState(() {
-        _restaurantsFuture = _controller.getUserRestaurants(); // Refresh the list
+        _restaurantsFuture = _controller.getUserRestaurants();
       });
       print("Restaurant deleted successfully.");
     } catch (e) {
@@ -79,6 +85,23 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
     final double imageHeight = screenHeight * 0.25; // 25% of screen height
 
     return Scaffold(
+      appBar: AppBar(
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.orange, Colors.orange],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        title: Text(
+          "Restaurant List",
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,
+      ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _restaurantsFuture,
         builder: (context, snapshot) {
@@ -87,7 +110,21 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
           } else if (snapshot.hasError) {
             return Center(child: Text('Error: ${snapshot.error}'));
           } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No restaurants found.'));
+            return Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text('No restaurants found.'),
+                  SizedBox(height: 20),
+                  ElevatedButton(
+                    onPressed: () {
+                     Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => RestaurantRegistrationPage(),)); // Replace with your registration page route
+                    },
+                    child: Text('Register Your Restaurant'),
+                  ),
+                ],
+              ),
+            );
           } else {
             List<Map<String, dynamic>> restaurants = snapshot.data!;
             return PageView.builder(
@@ -95,160 +132,149 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
               itemBuilder: (context, index) {
                 final restaurant = restaurants[index];
                 final bool isVerified = restaurant['verification'] == true;
-
-                return Container(
-                  width: screenWidth,
-                  margin: EdgeInsets.symmetric(
-                    horizontal: screenWidth * 0.02,
-                    vertical: screenHeight * 0.05,
-                  ),
-                  child: Card(
-                    elevation: 10,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(6),
+                return GestureDetector(
+                  onTap: () => _navigateToProductList(
+                      context, restaurant['restaurantId']),
+                  child: Container(
+                    width: screenWidth,
+                    margin: EdgeInsets.symmetric(
+                      horizontal: screenWidth * 0.01,
+                      vertical: screenHeight * 0.03,
                     ),
-                    child: ListView(
-                      padding: EdgeInsets.all(screenWidth * 0.03),
-                      children: [
-                        Column(
-                          children: [
-                            Container(
-                              width: screenWidth * 0.9, // Adjust width as needed
-                              height: screenHeight * 0.05, // Adjust height as needed
-                              color: Colors.orange, // Background color set to orange
-                              child: Align(
-                                alignment: Alignment.topRight, // Aligns the PopupMenuButton to the top-right corner
-                                child: PopupMenuButton<String>(
-                                  onSelected: (String result) {
-                                    if (result == 'Update') {
-                                      // Update action
-                                      print("Update selected");
-                                      // Navigate to the RestaurantEditScreen
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => RestaurantEditScreen(
-                                            restaurantId: restaurant['id'], // Use the actual restaurant ID from the map
-                                            restaurantData: {
-                                              'name': restaurant['name'],        // Pass the restaurant name
-                                              'address': restaurant['address'],  // Pass the restaurant address
-                                              'ownerName': restaurant['ownerName'], // Pass the owner name
-                                              'location': restaurant['location'], // Pass the location
-                                              'category': restaurant['category'], // Pass the category
-                                              'gender': restaurant['gender'],
-                                              'phoneNo': restaurant['phoneNo'],
-                                              'imageUrl': restaurant['imageUrl'],
-                                            },
-                                          ),
-                                        ),
-                                      );
-                                    } else if (result == 'Delete') {
-                                      // Delete action
-                                      print("Delete selected");
-                                      // Show confirmation dialog
-                                      _showDeleteConfirmationDialog(context, restaurant['id']);
-                                    }
-                                  },
-                                  itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                                    PopupMenuItem<String>(
-                                      value: 'Update',
-                                      child: Text('Update'),
-                                    ),
-                                    PopupMenuItem<String>(
-                                      value: 'Delete',
-                                      child: Text('Delete'),
-                                    ),
-                                  ],
-                                  icon: Icon(
-                                    Icons.more_vert,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 3,),
-                            ClipRRect(
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(6),
-                              ),
-                              child: restaurant['imageUrl'] != null
-                                  ? Image.network(
-                                restaurant['imageUrl'],
-                                width: double.infinity,
-                                height: imageHeight,
-                                fit: BoxFit.cover, // Ensures image covers the full width
-                              )
-                                  : Container(
-                                width: double.infinity,
-                                height: imageHeight,
-                                color: Colors.grey[200],
-                                child: Icon(
-                                  Icons.restaurant,
-                                  size: imageHeight * 0.5,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: screenHeight * 0.02),
-                        Text(
-                          'Restaurant Name: ${restaurant['name'] ?? 'No restaurant name'}',
-                          style: TextStyle(
-                            fontSize: screenWidth * 0.05,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        Text(
-                          'Owner: ${restaurant['ownerName'] ?? 'No owner'}',
-                          style: TextStyle(
-                            fontSize: screenWidth * 0.05,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
-                        Text('Address: ${restaurant['address'] ?? 'No address'}'),
-                        Text('Location: ${restaurant['location'] ?? 'No location'}'),
-                        Text('PhoneNo: ${restaurant['phoneNo'] ?? 'No phoneNo'}'),
-                        Text('RestaurantCategory: ${restaurant['category'] ?? 'No category'}'),
-                        Text('Gender: ${restaurant['gender'] ?? 'No gender'}'),
-                        SizedBox(height: screenHeight * 0.02),
-                        Text(
-                          isVerified ? 'Verification Successful' : 'Not Verified',
-                          style: TextStyle(
-                            fontSize: screenWidth * 0.05,
-                            fontWeight: FontWeight.bold,
-                            color: isVerified ? Colors.green : Colors.red,
-                          ),
-                        ),
-                        SizedBox(height: screenHeight * 0.02),
-                        if (isVerified)
-                          Column(
+                    child: Card(
+                      elevation: 10,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: ListView(
+                        padding: EdgeInsets.all(screenWidth * 0.03),
+                        children: [
+                          Stack(
                             children: [
-                              Container(
-                                width: double.infinity,
-                                height: 45,
-                                child: MaterialButton(
-                                  onPressed: () => _navigateToAddProduct(context, restaurant['id']),
-                                  color: Colors.orange,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(8.0),
+                              ClipRRect(
+                                borderRadius: BorderRadius.vertical(
+                                  top: Radius.circular(6),
+                                ),
+                                child: restaurant['imageUrl'] != null
+                                    ? Image.network(
+                                  restaurant['imageUrl'],
+                                  width: double.infinity,
+                                  height: imageHeight,
+                                  fit: BoxFit.cover,
+                                )
+                                    : Container(
+                                  width: double.infinity,
+                                  height: imageHeight,
+                                  color: Colors.grey[200],
+                                  child: Icon(
+                                    Icons.restaurant,
+                                    size: imageHeight * 0.5,
+                                    color: Colors.grey[600],
                                   ),
-                                  child: Text(
-                                    'Add Product',
-                                    style: TextStyle(
+                                ),
+                              ),
+                              Positioned(
+                                top: 1,
+                                right: 2,
+                                child: Container(
+                                  padding: EdgeInsets.all(1),
+                                  decoration: BoxDecoration(
+                                    color: Colors.blueGrey,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: PopupMenuButton<String>(
+                                    onSelected: (String result) {
+                                      if (result == 'Update') {
+                                        Navigator.push(
+                                          context,
+                                          MaterialPageRoute(
+                                            builder: (context) => RestaurantEditScreen(
+                                              restaurantId: restaurant['id'],
+                                              restaurantData: {
+                                                'name': restaurant['name'],
+                                                'address': restaurant['address'],
+                                                'ownerName': restaurant['ownerName'],
+                                                'location': restaurant['location'],
+                                                'category': restaurant['category'],
+                                                'gender': restaurant['gender'],
+                                                'phoneNo': restaurant['phoneNo'],
+                                                'imageUrl': restaurant['imageUrl'],
+                                              },
+                                            ),
+                                          ),
+                                        );
+                                      } else if (result == 'Delete') {
+                                        _showDeleteConfirmationDialog(context, restaurant['id']);
+                                      }
+                                    },
+                                    itemBuilder: (BuildContext context) =>
+                                    <PopupMenuEntry<String>>[
+                                      PopupMenuItem<String>(
+                                        value: 'Update',
+                                        child: Text('Update'),
+                                      ),
+                                      PopupMenuItem<String>(
+                                        value: 'Delete',
+                                        child: Text('Delete'),
+                                      ),
+                                    ],
+                                    icon: Icon(
+                                      Icons.more_vert,
                                       color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
                                 ),
                               ),
-                              SizedBox(height: screenHeight * 0.02),
                             ],
                           ),
-                      ],
+                          SizedBox(height: screenHeight * 0.02),
+                          Text(
+                            'Restaurant Name: ${restaurant['name'] ?? 'No restaurant name'}',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text('Owner Name: ${restaurant['ownerName'] ?? 'No owner'}'),
+                          Text('Address: ${restaurant['address'] ?? 'No address'}'),
+                          Text('Location: ${restaurant['location'] ?? 'No location'}'),
+                          Text('PhoneNo: ${restaurant['phoneNo'] ?? 'No phoneNo'}'),
+                          Text('RestaurantCategory: ${restaurant['category'] ?? 'No category'}'),
+                          Text('Gender: ${restaurant['gender'] ?? 'No gender'}'),
+                          SizedBox(height: screenHeight * 0.02),
+                          Text(
+                            isVerified ? 'Verification Successful' : 'Not Verified',
+                            style: TextStyle(
+                              fontSize: screenWidth * 0.05,
+                              fontWeight: FontWeight.bold,
+                              color: isVerified ? Colors.green : Colors.red,
+                            ),
+                          ),
+                          SizedBox(height: screenHeight * 0.05),
+                          if (isVerified)
+                            Column(
+                              children: [
+                                Container(
+                                  width: double.infinity,
+                                  height: 45,
+                                  child: MaterialButton(
+                                    onPressed: () => _navigateToAddProduct(context, restaurant['id']),
+                                    color: Colors.orange,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(8.0),
+                                    ),
+                                    child: Text(
+                                      'Add Product',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                        ],
+                      ),
                     ),
                   ),
                 );

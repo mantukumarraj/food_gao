@@ -51,7 +51,7 @@ class RegistrationController {
 
   Future<String> _uploadImage(String uid, File image) async {
     try {
-      Reference storageRef = _storage.ref().child('user_images/$uid');
+      Reference storageRef = _storage.ref().child('partner_images/$uid');
       UploadTask uploadTask = storageRef.putFile(image);
       TaskSnapshot taskSnapshot = await uploadTask;
       return await taskSnapshot.ref.getDownloadURL();

@@ -72,23 +72,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 _pickImageFromCamera();
               },
             ),
-            ListTile(
-              leading: const Icon(Icons.delete),
-              title: const Text('Delete Photo'),
-              onTap: () {
-                setState(() {
-                  _imageFile = null;
-                });
-                Navigator.of(context).pop();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.cancel),
-              title: const Text('Cancel'),
-              onTap: () {
-                Navigator.of(context).pop();
-              },
-            ),
           ],
         );
       },
@@ -99,7 +82,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
     try {
       final Reference storageRef = FirebaseStorage.instance.ref();
       final Reference imageRef = storageRef
-          .child('user_images/${DateTime.now().millisecondsSinceEpoch}.jpg');
+          .child('partner_images/${DateTime.now().millisecondsSinceEpoch}.jpg');
       await imageRef.putFile(imageFile);
       final String imageUrl = await imageRef.getDownloadURL();
       return imageUrl;
@@ -137,8 +120,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
         imageUrl = await _uploadImageToFirebaseStorage(_imageFile!);
       }
 
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        'uid': user.uid,
+      await FirebaseFirestore.instance.collection('partners').doc(user.uid).set({
+        'partnerId': user.uid,
         'name': name,
         'phone': phone,
         'gender': gender,
@@ -243,6 +226,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   const SizedBox(height: 30),
                   TextFormField(
                     controller: _nameController,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your name';
+                      }
+                      return null;
+                    },
                     decoration: InputDecoration(
                       labelText: "Name",
                       border: OutlineInputBorder(
@@ -263,6 +252,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   const SizedBox(height: 20),
                   TextFormField(
                     controller: _ageController,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your age';
+                      }
+                      return null;
+                    },
                     decoration: InputDecoration(
                       labelText: "Age",
                       border: OutlineInputBorder(
@@ -284,6 +279,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   const SizedBox(height: 20),
                   DropdownButtonFormField<String>(
                     value: _selectedGender,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please selecte your gender ';
+                      }
+                      return null;
+                    },
                     items: ['Male', 'Female', 'Other']
                         .map((label) => DropdownMenuItem(
                       value: label,
@@ -316,6 +317,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   const SizedBox(height: 20),
                   TextFormField(
                     controller: _addressController,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your address';
+                      }
+                      return null;
+                    },
                     decoration: InputDecoration(
                       labelText: "Address",
                       border: OutlineInputBorder(
@@ -332,7 +339,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             color: Colors.orange, width: 1.0),
                       ),
                     ),
-
                   ),
                   const SizedBox(height: 30),
                   ElevatedButton(
