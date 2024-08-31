@@ -1,7 +1,13 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:foodgeo_partner/views/screen/home_page.dart';
+import 'package:geolocator/geolocator.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:location/location.dart' as loc;
+import 'package:geocoding/geocoding.dart' as geo;
+
 import '../../controller/restaurant_registration_controller.dart';
 import '../widget/costum_textfeld.dart';
 import 'package:flutter/services.dart';
@@ -13,11 +19,283 @@ class RestaurantRegistrationPage extends StatefulWidget {
 
 class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage> {
   final RegisterControllers _controller = RegisterControllers();
+  final Completer<GoogleMapController> _mapcontroller = Completer<GoogleMapController>();
+
+
   File? _selectedImage;
   bool _isLoading = false;
   String? _selectedCategory;
   String? _selectedGender;
   final _formKey = GlobalKey<FormState>();
+  bool _isDropdownExpanded = false;
+  bool _isSearching = false;
+
+  static const CameraPosition _kGooglePlex = CameraPosition(
+    target: LatLng(25.971588, 84.924759),
+    zoom: 14.4746,
+  );
+
+  final Set<Marker> _markers = {};
+  final Set<Polyline> _polyline = {};
+  loc.LocationData? _currentLocation;
+  TextEditingController _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeMarkersAndPolyline();
+    _getCurrentLocation();
+    _selectedCategory = _controller.category;
+  }
+
+  void _initializeMarkersAndPolyline() {
+    // Initialize markers and polyline if needed
+  }
+
+  Future<void> _getCurrentLocation() async {
+    loc.Location location = loc.Location();
+    try {
+      bool _serviceEnabled = await location.serviceEnabled();
+      if (!_serviceEnabled) {
+        _serviceEnabled = await location.requestService();
+        if (!_serviceEnabled) return;
+      }
+
+      loc.PermissionStatus _permissionGranted = await location.hasPermission();
+      if (_permissionGranted == loc.PermissionStatus.denied) {
+        _permissionGranted = await location.requestPermission();
+        if (_permissionGranted != loc.PermissionStatus.granted) return;
+      }
+
+      _currentLocation = await location.getLocation();
+
+      if (_currentLocation != null) {
+        final GoogleMapController controller = await _mapcontroller.future;
+        final LatLng currentLatLng = LatLng(_currentLocation!.latitude!, _currentLocation!.longitude!);
+
+        controller.animateCamera(CameraUpdate.newLatLngZoom(currentLatLng, 14.0));
+
+        _markers.add(
+          Marker(
+            markerId: MarkerId('currentLocation'),
+            position: currentLatLng,
+            infoWindow: InfoWindow(
+              title: 'Your Location',
+            ),
+            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+          ),
+        );
+
+        setState(() {});
+      }
+    } catch (e) {
+      print('Error getting location: $e');
+    }
+  }
+
+  // Future<void> _searchLocation(String query) async {
+  //   setState(() {
+  //     _isSearching = true;
+  //   });
+  //
+  //   final GoogleMapController controller = await _mapcontroller.future;
+  //   try {
+  //     // Use geocoding package to get the location from address
+  //     List<geo.Location> locations = await geo.locationFromAddress(query);
+  //
+  //     if (locations.isNotEmpty) {
+  //       final LatLng cityLocation = LatLng(locations.first.latitude, locations.first.longitude);
+  //
+  //       // Get the latitude and longitude of the searched location
+  //       double latitude = locations.first.latitude;  // Latitude
+  //       double longitude = locations.first.longitude;  // Longitude
+  //       _controller.locationlongitudeController.text = longitude as String;
+  //
+  //       // Fetch the address from the coordinates using reverse geocoding
+  //       List<geo.Placemark> placemarks = await geo.placemarkFromCoordinates(latitude, longitude);
+  //
+  //       String address = "";
+  //       if (placemarks.isNotEmpty) {
+  //         geo.Placemark place = placemarks.first;
+  //         address = "${place.name}, ${place.locality}, ${place.administrativeArea}, ${place.country}";
+  //         print('Searched Location Address: $address');
+  //         _controller.locationController.text =address;
+  //
+  //         // Store the address in locationController
+  //         // <-- Store the address here
+  //       }
+  //
+  //       // Move the camera to the searched location
+  //       await controller.animateCamera(CameraUpdate.newLatLngZoom(cityLocation, 12.0));
+  //
+  //       _markers.add(
+  //         Marker(
+  //           markerId: MarkerId('cityLocation'),
+  //           position: cityLocation,
+  //           infoWindow: InfoWindow(
+  //             title: query,
+  //             snippet: address, // Show address in snippet
+  //           ),
+  //         ),
+  //       );
+  //
+  //       // Calculate distance if current location is available
+  //       if (_currentLocation != null) {
+  //         double distanceInKm = Geolocator.distanceBetween(
+  //           _currentLocation!.latitude!,
+  //           _currentLocation!.longitude!,
+  //           cityLocation.latitude,
+  //           cityLocation.longitude,
+  //         ) / 1000;
+  //
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           SnackBar(content: Text('Distance: ${distanceInKm.toStringAsFixed(2)} km')),
+  //         );
+  //       }
+  //       setState(() {});
+  //     } else {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text('Location not found')),
+  //       );
+  //     }
+  //   } catch (e) {
+  //     print('Error searching location: $e');
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Error: Unable to find the location')),
+  //     );
+  //   } finally {
+  //     setState(() {
+  //       _isSearching = false;
+  //     });
+  //   }
+  // }
+  // Future<void> _searchLocation(String query) async {
+  //   setState(() {
+  //     _isSearching = true;
+  //   });
+  //
+  //   final GoogleMapController controller = await _mapcontroller.future;
+  //   try {
+  //     List<geo.Location> locations = await geo.locationFromAddress(query);
+  //     if (locations.isNotEmpty) {
+  //       final LatLng cityLocation = LatLng(locations.first.latitude, locations.first.longitude);
+  //       await controller.animateCamera(CameraUpdate.newLatLngZoom(cityLocation, 12.0));
+  //
+  //       _markers.add(
+  //         Marker(
+  //           markerId: MarkerId('cityLocation'),
+  //           position: cityLocation,
+  //           infoWindow: InfoWindow(
+  //             title: query,
+  //           ),
+  //         ),
+  //       );
+  //
+  //       if (_currentLocation != null) {
+  //         double distanceInKm = Geolocator.distanceBetween(
+  //           _currentLocation!.latitude!,
+  //           _currentLocation!.longitude!,
+  //           cityLocation.latitude,
+  //           cityLocation.longitude,
+  //         ) / 1000;
+  //
+  //         ScaffoldMessenger.of(context).showSnackBar(
+  //           SnackBar(content: Text('Distance: ${distanceInKm.toStringAsFixed(2)} km')),
+  //         );
+  //       }
+  //       setState(() {});
+  //     } else {
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         SnackBar(content: Text('Location not found')),
+  //       );
+  //     }
+  //   } catch (e) {
+  //     print('Error searching location: $e');
+  //     ScaffoldMessenger.of(context).showSnackBar(
+  //       SnackBar(content: Text('Error: Unable to find the location')),
+  //     );
+  //   } finally {
+  //     setState(() {
+  //       _isSearching = false;
+  //     });
+  //   }
+  // }
+
+  Future<void> _searchLocation(String query) async {
+    setState(() {
+      _isSearching = true;
+    });
+
+    final GoogleMapController controller = await _mapcontroller.future;
+    try {
+      List<geo.Location> locations = await geo.locationFromAddress(query);
+      if (locations.isNotEmpty) {
+        final LatLng cityLocation = LatLng(locations.first.latitude, locations.first.longitude);
+        await controller.animateCamera(CameraUpdate.newLatLngZoom(cityLocation, 12.0));
+
+        // Store the longitude in locationLongitudeController
+        _controller.locationlongitudeController.text = cityLocation.longitude.toString();
+
+        // Reverse geocoding to get the address before marker click
+        List<geo.Placemark> placemarks = await geo.placemarkFromCoordinates(
+          cityLocation.latitude,
+          cityLocation.longitude,
+        );
+
+        String address = "";
+        if (placemarks.isNotEmpty) {
+          geo.Placemark place = placemarks.first;
+          address = "${place.name}, ${place.locality},${place.administrativeArea}, ${place.country}";
+
+          // Store the address in locationController
+          _controller.locationController.text = address;
+        }
+
+        _markers.add(
+          Marker(
+            markerId: MarkerId('cityLocation'),
+            position: cityLocation,
+            infoWindow: InfoWindow(
+              title: query,
+            ),
+            onTap: () async {
+              // Show a SnackBar with the address when marker is tapped
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Address: $address')),
+              );
+            },
+          ),
+        );
+
+        if (_currentLocation != null) {
+          double distanceInKm = Geolocator.distanceBetween(
+            _currentLocation!.latitude!,
+            _currentLocation!.longitude!,
+            cityLocation.latitude,
+            cityLocation.longitude,
+          ) / 1000;
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Distance: ${distanceInKm.toStringAsFixed(2)} km')),
+          );
+        }
+        setState(() {});
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Location not found')),
+        );
+      }
+    } catch (e) {
+      print('Error searching location: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: Unable to find the location')),
+      );
+    } finally {
+      setState(() {
+        _isSearching = false;
+      });
+    }
+  }
 
   final List<String> _categories = [
     'Fast Food',
@@ -27,12 +305,6 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
     'Buffet',
     'Food Truck',
   ];
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedCategory = _controller.category;
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -57,7 +329,7 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
         leading: IconButton(
           icon: Icon(Icons.arrow_back),
           onPressed: () {
-            Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
+            Navigator.pop(context);
           },
         ),
       ),
@@ -192,6 +464,7 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                             leading: Radio<String>(
                               value: 'Male',
                               groupValue: _selectedGender,
+
                               onChanged: (String? value) {
                                 setState(() {
                                   _selectedGender = value;
@@ -219,16 +492,83 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                   ],
                 ),
                 SizedBox(height: 20),
-                CustomTextField(
-                  labelText: 'Location',
-                  icon: Icons.location_on,
-                  controller: _controller.locationController,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'Please enter the location';
-                    }
-                    return null;
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      _isDropdownExpanded = !_isDropdownExpanded;
+                    });
                   },
+                  child: Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(color: Colors.orange, width: 2.0),
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    padding: EdgeInsets.all(8.0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Select outlet’s location on the map',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        Icon(
+                          _isDropdownExpanded ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                SizedBox(height: 7,),
+                AnimatedContainer(
+                  duration: Duration(milliseconds: 300),
+                  height: _isDropdownExpanded ? MediaQuery.of(context).size.height * 0.5 : 0,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsets.all(.0),
+                          child: TextField(
+                            controller: _searchController,
+                            decoration: InputDecoration(
+                              hintText: 'Enter your restaurant’s location',
+                              prefixIcon: Icon(Icons.search, color: Colors.grey),
+                              suffixIcon: IconButton(
+                                icon: Icon(Icons.my_location, color: Colors.grey),
+                                onPressed: () {
+                                  _getCurrentLocation();
+                                },
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8.0), // Rounded corners
+                                borderSide: BorderSide.none,
+                              ),
+                              filled: true,
+                              fillColor: Colors.grey.shade200, // Light grey background color
+                              contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
+                            ),
+                            onSubmitted: (query) {
+                              _searchLocation(query);
+                            },
+                          ),
+                        ),
+                        SizedBox(height: 5,),
+                        SizedBox(
+                          height: 300,
+                          child: GoogleMap(
+                            mapType: MapType.normal,
+                            initialCameraPosition: _kGooglePlex,
+                            markers: _markers,
+                            polylines: _polyline,
+                            myLocationEnabled: true,
+                            myLocationButtonEnabled: false,
+                            onMapCreated: (GoogleMapController controller) {
+                              _mapcontroller.complete(controller);
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 SizedBox(height: 20),
                 DropdownButtonFormField<String>(
@@ -243,6 +583,7 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                   items: _categories.map((String category) {
                     return DropdownMenuItem<String>(
                       value: category,
+
                       child: Text(category),
                     );
                   }).toList(),

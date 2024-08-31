@@ -243,6 +243,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   const SizedBox(height: 30),
                   TextFormField(
                     controller: _nameController,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your name';
+                      }
+                      return null;
+                    },
                     decoration: InputDecoration(
                       labelText: "Name",
                       border: OutlineInputBorder(
@@ -263,6 +269,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   const SizedBox(height: 20),
                   TextFormField(
                     controller: _ageController,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your age';
+                      }
+                      return null;
+                    },
                     decoration: InputDecoration(
                       labelText: "Age",
                       border: OutlineInputBorder(
@@ -284,6 +296,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   const SizedBox(height: 20),
                   DropdownButtonFormField<String>(
                     value: _selectedGender,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please selecte your gender ';
+                      }
+                      return null;
+                    },
                     items: ['Male', 'Female', 'Other']
                         .map((label) => DropdownMenuItem(
                       value: label,
@@ -316,6 +334,12 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   const SizedBox(height: 20),
                   TextFormField(
                     controller: _addressController,
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your address';
+                      }
+                      return null;
+                    },
                     decoration: InputDecoration(
                       labelText: "Address",
                       border: OutlineInputBorder(
@@ -332,7 +356,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
                             color: Colors.orange, width: 1.0),
                       ),
                     ),
-
                   ),
                   const SizedBox(height: 30),
                   ElevatedButton(

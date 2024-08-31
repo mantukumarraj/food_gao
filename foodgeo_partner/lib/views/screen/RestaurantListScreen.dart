@@ -27,8 +27,15 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
       ),
     );
   }
+  void _navigateToProductList(BuildContext context, String restaurantId) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProductListScreen(restaurantId: restaurantId),
+      ),
+    );
+  }
 
-  // Show delete confirmation dialog
   void _showDeleteConfirmationDialog(BuildContext context, String restaurantId) {
     showDialog(
       context: context,
@@ -40,14 +47,13 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
             TextButton(
               child: Text('Cancel'),
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
               },
             ),
             TextButton(
               child: Text('Delete'),
               onPressed: () async {
-                Navigator.of(context).pop(); // Close the dialog
-                // Call delete function
+                Navigator.of(context).pop();
                 await _deleteRestaurant(restaurantId);
               },
             ),
@@ -56,29 +62,41 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
       },
     );
   }
-
-  // Function to delete restaurant
   Future<void> _deleteRestaurant(String restaurantId) async {
     try {
-      // Call the delete method from your controller
       await _controller.deleteRestaurant(restaurantId);
       setState(() {
-        _restaurantsFuture = _controller.getUserRestaurants(); // Refresh the list
+        _restaurantsFuture = _controller.getUserRestaurants();
       });
       print("Restaurant deleted successfully.");
     } catch (e) {
       print("Failed to delete restaurant: ${e.toString()}");
     }
   }
-
   @override
   Widget build(BuildContext context) {
     final mediaQuery = MediaQuery.of(context);
     final double screenWidth = mediaQuery.size.width;
     final double screenHeight = mediaQuery.size.height;
     final double imageHeight = screenHeight * 0.25; // 25% of screen height
-
     return Scaffold(
+      appBar: AppBar(
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [Colors.orange, Colors.orange],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+          ),
+        ),
+        title: Text(
+          "Restaurant List",
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.white),
+        ),
+        centerTitle: true,
+      ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: _restaurantsFuture,
         builder: (context, snapshot) {
@@ -95,12 +113,15 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
               itemBuilder: (context, index) {
                 final restaurant = restaurants[index];
                 final bool isVerified = restaurant['verification'] == true;
+                return GestureDetector(
+                  onTap: () => _navigateToProductList(
+                      context, restaurant['restaurantId']),
 
-                return Container(
+               child:   Container(
                   width: screenWidth,
                   margin: EdgeInsets.symmetric(
-                    horizontal: screenWidth * 0.02,
-                    vertical: screenHeight * 0.05,
+                    horizontal: screenWidth * 0.01,
+                    vertical: screenHeight * 0.03,
                   ),
                   child: Card(
                     elevation: 10,
@@ -110,31 +131,54 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                     child: ListView(
                       padding: EdgeInsets.all(screenWidth * 0.03),
                       children: [
-                        Column(
+                        Stack(
                           children: [
-                            Container(
-                              width: screenWidth * 0.9, // Adjust width as needed
-                              height: screenHeight * 0.05, // Adjust height as needed
-                              color: Colors.orange, // Background color set to orange
-                              child: Align(
-                                alignment: Alignment.topRight, // Aligns the PopupMenuButton to the top-right corner
-                                child: PopupMenuButton<String>(
+                            ClipRRect(
+                              borderRadius: BorderRadius.vertical(
+                                top: Radius.circular(6),
+                              ),
+                              child: restaurant['imageUrl'] != null
+                                  ? Image.network(
+                                restaurant['imageUrl'],
+                                width: double.infinity,
+                                height: imageHeight,
+                                fit: BoxFit.cover,
+                              )
+                                  : Container(
+                                width: double.infinity,
+                                height: imageHeight,
+                                color: Colors.grey[200],
+                                child: Icon(
+                                  Icons.restaurant,
+                                  size: imageHeight * 0.5,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ),
+                            Positioned(
+                              top: 1,
+                              right: 2,
+                              child: Container(
+                                padding: EdgeInsets.all(1),
+                                decoration: BoxDecoration(
+                                  color: Colors.blueGrey,
+                                  shape: BoxShape.circle,
+                                ),
+                                child:
+                                PopupMenuButton<String>(
                                   onSelected: (String result) {
                                     if (result == 'Update') {
-                                      // Update action
-                                      print("Update selected");
-                                      // Navigate to the RestaurantEditScreen
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
                                           builder: (context) => RestaurantEditScreen(
-                                            restaurantId: restaurant['id'], // Use the actual restaurant ID from the map
+                                            restaurantId: restaurant['id'],
                                             restaurantData: {
-                                              'name': restaurant['name'],        // Pass the restaurant name
-                                              'address': restaurant['address'],  // Pass the restaurant address
-                                              'ownerName': restaurant['ownerName'], // Pass the owner name
-                                              'location': restaurant['location'], // Pass the location
-                                              'category': restaurant['category'], // Pass the category
+                                              'name': restaurant['name'],
+                                              'address': restaurant['address'],
+                                              'ownerName': restaurant['ownerName'],
+                                              'location': restaurant['location'],
+                                              'category': restaurant['category'],
                                               'gender': restaurant['gender'],
                                               'phoneNo': restaurant['phoneNo'],
                                               'imageUrl': restaurant['imageUrl'],
@@ -143,13 +187,11 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                                         ),
                                       );
                                     } else if (result == 'Delete') {
-                                      // Delete action
-                                      print("Delete selected");
-                                      // Show confirmation dialog
                                       _showDeleteConfirmationDialog(context, restaurant['id']);
                                     }
                                   },
-                                  itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                                  itemBuilder: (BuildContext context) =>
+                                  <PopupMenuEntry<String>>[
                                     PopupMenuItem<String>(
                                       value: 'Update',
                                       child: Text('Update'),
@@ -166,48 +208,15 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                                 ),
                               ),
                             ),
-                            SizedBox(height: 3,),
-                            ClipRRect(
-                              borderRadius: BorderRadius.vertical(
-                                top: Radius.circular(6),
-                              ),
-                              child: restaurant['imageUrl'] != null
-                                  ? Image.network(
-                                restaurant['imageUrl'],
-                                width: double.infinity,
-                                height: imageHeight,
-                                fit: BoxFit.cover, // Ensures image covers the full width
-                              )
-                                  : Container(
-                                width: double.infinity,
-                                height: imageHeight,
-                                color: Colors.grey[200],
-                                child: Icon(
-                                  Icons.restaurant,
-                                  size: imageHeight * 0.5,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ),
                           ],
                         ),
                         SizedBox(height: screenHeight * 0.02),
                         Text(
                           'Restaurant Name: ${restaurant['name'] ?? 'No restaurant name'}',
-                          style: TextStyle(
-                            fontSize: screenWidth * 0.05,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        Text(
-                          'Owner: ${restaurant['ownerName'] ?? 'No owner'}',
-                          style: TextStyle(
-                            fontSize: screenWidth * 0.05,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
+                        Text('Owner Name: ${restaurant['ownerName'] ?? 'No owner'}'),
                         Text('Address: ${restaurant['address'] ?? 'No address'}'),
                         Text('Location: ${restaurant['location'] ?? 'No location'}'),
                         Text('PhoneNo: ${restaurant['phoneNo'] ?? 'No phoneNo'}'),
@@ -222,7 +231,7 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                             color: isVerified ? Colors.green : Colors.red,
                           ),
                         ),
-                        SizedBox(height: screenHeight * 0.02),
+                        SizedBox(height: screenHeight * 0.05),
                         if (isVerified)
                           Column(
                             children: [
@@ -245,12 +254,12 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                                   ),
                                 ),
                               ),
-                              SizedBox(height: screenHeight * 0.02),
                             ],
                           ),
                       ],
                     ),
                   ),
+                ),
                 );
               },
             );

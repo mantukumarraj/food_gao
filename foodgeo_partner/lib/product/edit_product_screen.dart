@@ -131,7 +131,7 @@ class _ProductEditState extends State<ProductEdit> {
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: [Colors.orange, Colors.deepOrange],
+              colors: [Colors.orange, Colors.orange],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),

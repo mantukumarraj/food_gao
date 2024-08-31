@@ -10,9 +10,9 @@ class RegisterControllers {
   final TextEditingController addressController = TextEditingController();
   final TextEditingController ownerNameController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
+  final TextEditingController locationlongitudeController = TextEditingController();
   final TextEditingController phonenoController = TextEditingController();
-
-  String category = ''; // Holds the selected category
+  String category = '';
 
   // Register a new restaurant
   Future<void> registerUser(String gender, File image) async {
@@ -32,6 +32,7 @@ class RegisterControllers {
         'ownerName': ownerNameController.text.trim(),
         'phoneNo': phonenoController.text.trim(),
         'location': locationController.text.trim(),
+        'locationlongitude': locationlongitudeController.text.trim(),
         'category': category,
         'imageUrl': imageUrl,
         'restaurantId': restaurantId,
@@ -122,29 +123,20 @@ class RegisterControllers {
       throw Exception("Failed to update restaurant: ${e.toString()}");
     }
   }
-
-  // Delete a restaurant and its products
   Future<void> deleteRestaurant(String restaurantId) async {
     try {
-      // Delete all products associated with the restaurant
       await _deleteProducts(restaurantId);
-
-      // Delete restaurant image from Firebase Storage
       await _deleteRestaurantImage(restaurantId);
-
-      // Delete the restaurant document from Firestore
       await FirebaseFirestore.instance
           .collection('restaurants')
           .doc(restaurantId)
           .delete();
-
       print("Restaurant and its products have been deleted.");
     } catch (e) {
       throw Exception("Failed to delete restaurant: ${e.toString()}");
     }
   }
 
-  // Delete all products associated with a restaurant
   Future<void> _deleteProducts(String restaurantId) async {
     try {
       final querySnapshot = await FirebaseFirestore.instance
@@ -163,8 +155,6 @@ class RegisterControllers {
       throw Exception("Failed to delete products: ${e.toString()}");
     }
   }
-
-  // Delete restaurant image from Firebase Storage
   Future<void> _deleteRestaurantImage(String restaurantId) async {
     try {
       final ref = FirebaseStorage.instance

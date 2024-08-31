@@ -4,8 +4,7 @@ import 'package:foodgeo_partner/views/screen/RestaurantListScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:carousel_slider/carousel_slider.dart';
-
-import '../../product/edit_product_screen.dart';
+import '../../product/productDetail_screen.dart';
 import 'Profile.dart';
 import 'order_screen.dart';
 
@@ -154,23 +153,22 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
             )
-          : null, // App bar only on the home page
+          : null,
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed,
-        // Ensures all icons are always shown
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
             icon: Icon(Icons.home),
-            label: '', // No label
+            label: '',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.restaurant),
-            label: '', // No label
+            label: '',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.outbox),
-            label: '', // No label
+            label: '',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
@@ -181,8 +179,7 @@ class _HomePageState extends State<HomePage> {
         selectedItemColor: Colors.orange,
         onTap: _onItemTapped,
         showSelectedLabels: false,
-        // Hide label for selected item
-        showUnselectedLabels: false, // Hide label for unselected items
+        showUnselectedLabels: false,
       ),
     );
   }
@@ -205,13 +202,70 @@ class _HomePageState extends State<HomePage> {
               items: _restaurants.map((restaurant) {
                 return Builder(
                   builder: (BuildContext context) {
+                    return GestureDetector(
+                      onTap: () => _navigateToProductList(
+                          context, restaurant['restaurantId']),
+                      child: Container(
+                        width: MediaQuery.of(context).size.width,
+                        margin: EdgeInsets.symmetric(horizontal: 5.0),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10.0),
+                          image: DecorationImage(
+                            image: NetworkImage(restaurant['imageUrl']),
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        child: Align(
+                          alignment: Alignment.bottomCenter,
+                          child: Container(
+                            width: double.infinity,
+                            padding: EdgeInsets.all(8.0),
+                            decoration: BoxDecoration(
+                              color: Colors.black54,
+                              borderRadius: BorderRadius.only(
+                                bottomLeft: Radius.circular(7.0),
+                                bottomRight: Radius.circular(7.0),
+                              ),
+                            ),
+                            child: Text(
+                              'Restaurant Name: ${restaurant['name']}',
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              }).toList(),
+            ),
+          ] else ...[
+            SizedBox(height: 20.0),
+            CarouselSlider(
+              options: CarouselOptions(
+                height: 200.0,
+                autoPlay: true,
+                viewportFraction: 1.0,
+                autoPlayInterval: Duration(seconds: 3),
+                autoPlayAnimationDuration: Duration(milliseconds: 800),
+                autoPlayCurve: Curves.fastOutSlowIn,
+              ),
+              items: [
+                Builder(
+                  builder: (BuildContext context) {
                     return Container(
                       width: MediaQuery.of(context).size.width,
                       margin: EdgeInsets.symmetric(horizontal: 5.0),
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(10.0),
                         image: DecorationImage(
-                          image: NetworkImage(restaurant['imageUrl']),
+                          image:
+                              AssetImage('assets/Images/resturant image.jpeg'),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -228,7 +282,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
                           child: Text(
-                            'Restaurant Name: ${restaurant['name']}',
+                            'No restaurants found',
                             style: TextStyle(
                               fontSize: 17,
                               fontWeight: FontWeight.bold,
@@ -240,50 +294,14 @@ class _HomePageState extends State<HomePage> {
                       ),
                     );
                   },
-                );
-              }).toList(),
-            ),
-          ] else ...[
-            SizedBox(height: 20.0),
-            Center(
-              child: Text(
-                'No restaurants found',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.grey,
                 ),
-              ),
+              ],
             ),
           ],
+
           SizedBox(height: 20),
-          Row(
-            children: [
-              Padding(
-                padding: EdgeInsets.only(left: 10.0),
-                // Left side se padding add karna
-                child: Text(
-                  'Recommmended for you',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-              ),
-              Spacer(),
-              Padding(
-                padding: EdgeInsets.only(right: 16.0),
-                // Right side se padding add karna
-                child: GestureDetector(
-                  onTap: _toggleShowAllProducts, // Add this
-                  child: Text(
-                    _showAllProducts ? 'See Less' : 'See More', // Toggle text
-                    style: TextStyle(fontSize: 14, color: Colors.blue),
-                  ),
-                ),
-              ),
-            ],
-          ),
-          SizedBox(
-            height: 20,
-          ),
+
+          // Product Grid
           if (_filteredProducts.isEmpty) ...[
             Center(child: Text('No products found.'))
           ] else ...[
@@ -305,6 +323,15 @@ class _HomePageState extends State<HomePage> {
                 final product = _filteredProducts[index];
 
                 return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            ProductDetailScreen(product: product),
+                      ),
+                    );
+                  },
                   child: Card(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0),
@@ -372,6 +399,32 @@ class _HomePageState extends State<HomePage> {
                 );
               },
             ),
+            if (_filteredProducts.length > 4) ...[
+              SizedBox(height: 20),
+              Row(
+                children: [
+                  Padding(
+                    padding: EdgeInsets.only(left: 10.0),
+                    child: Text(
+                      'Recommended for you',
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                  Spacer(),
+                  Padding(
+                    padding: EdgeInsets.only(right: 16.0),
+                    child: GestureDetector(
+                      onTap: _toggleShowAllProducts,
+                      child: Text(
+                        _showAllProducts ? 'See Less' : 'See More',
+                        style: TextStyle(fontSize: 14, color: Colors.blue),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ],
       ),
