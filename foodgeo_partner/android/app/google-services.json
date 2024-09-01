@@ -60,7 +60,7 @@
         {
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.food_gao_delevery_partner",
+            "package_name": "com.example.food_gao_delevery_partner"
           }
         },
         {
@@ -102,7 +102,7 @@
         {
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.foodgeo_partner",
+            "package_name": "com.example.foodgeo_partner"
           }
         },
         {

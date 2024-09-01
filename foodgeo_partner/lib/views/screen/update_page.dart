@@ -1,10 +1,12 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:foodgeo_partner/home_page.dart';
+
+
 import 'package:foodgeo_partner/controller/update_controller.dart'; // Ensure this controller handles updates
 import '../../widget/image_picker.dart';
 import '../widget/costum_buttom.dart';
 import '../widget/costum_textfeld.dart';
+import 'home_screen.dart';
 
 class UpdatePage extends StatefulWidget {
   @override

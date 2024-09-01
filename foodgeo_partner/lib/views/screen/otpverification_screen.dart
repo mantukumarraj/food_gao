@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:foodgeo_partner/views/screen/home_page.dart';
+import 'package:foodgeo_partner/views/screen/home_screen.dart';
 import 'package:foodgeo_partner/views/screen/register_screen.dart';
 import 'package:pin_code_fields/pin_code_fields.dart';
 
@@ -73,7 +73,7 @@ class _OtpScreenState extends State<OtpScreen> {
         if (isFirstLogin) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => RegistrationPage(phoneNumber: widget.phoneNumber)),
+            MaterialPageRoute(builder: (context) => RegistrationPage()),
           );
         } else {
           Navigator.pushReplacement(

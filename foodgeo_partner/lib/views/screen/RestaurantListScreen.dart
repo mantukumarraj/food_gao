@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:foodgeo_partner/views/screen/restaurant_Edit_Screen.dart';
+
+import 'package:foodgeo_partner/views/screen/restaurant_edit_screen.dart';
 import '../../controller/restaurant_registration_controller.dart';
-import '../../product/product_add.dart';
-import '../../product/product_list_screen.dart';
+import 'add_product.dart';
+
 
 class RestaurantListScreen extends StatefulWidget {
   @override
@@ -28,7 +29,6 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
     );
   }
 
-  // Show delete confirmation dialog
   void _showDeleteConfirmationDialog(BuildContext context, String restaurantId) {
     showDialog(
       context: context,
@@ -40,14 +40,13 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
             TextButton(
               child: Text('Cancel'),
               onPressed: () {
-                Navigator.of(context).pop(); // Close the dialog
+                Navigator.of(context).pop();
               },
             ),
             TextButton(
               child: Text('Delete'),
               onPressed: () async {
                 Navigator.of(context).pop(); // Close the dialog
-                // Call delete function
                 await _deleteRestaurant(restaurantId);
               },
             ),
@@ -57,14 +56,15 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
     );
   }
 
-  // Function to delete restaurant
   Future<void> _deleteRestaurant(String restaurantId) async {
     try {
-      // Call the delete method from your controller
+      await _controller.deleteRestaurant(restaurantId);
       setState(() {
         _restaurantsFuture = _controller.getUserRestaurants(); // Refresh the list
       });
+      print("Restaurant deleted successfully.");
     } catch (e) {
+      print("Failed to delete restaurant: ${e.toString()}");
     }
   }
 
@@ -97,7 +97,7 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                   width: screenWidth,
                   margin: EdgeInsets.symmetric(
                     horizontal: screenWidth * 0.02,
-                    vertical: screenHeight * 0.05,
+                    vertical: screenHeight * 0.02,
                   ),
                   child: Card(
                     elevation: 10,
@@ -107,59 +107,8 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                     child: ListView(
                       padding: EdgeInsets.all(screenWidth * 0.03),
                       children: [
-                        Column(
+                        Stack(
                           children: [
-                            Container(
-                              width: screenWidth * 0.9, // Adjust width as needed
-                              height: screenHeight * 0.05, // Adjust height as needed
-                              color: Colors.orange, // Background color set to orange
-                              child: Align(
-                                alignment: Alignment.topRight, // Aligns the PopupMenuButton to the top-right corner
-                                child: PopupMenuButton<String>(
-                                  onSelected: (String result) {
-                                    if (result == 'Update') {
-                                      // Update action
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (context) => RestaurantEditScreen(
-                                            restaurantId: restaurant['id'], // Use the actual restaurant ID from the map
-                                            restaurantData: {
-                                              'name': restaurant['name'], // Pass the restaurant name
-                                              'address': restaurant['address'], // Pass the restaurant address
-                                              'ownerName': restaurant['ownerName'], // Pass the owner name
-                                              'location': restaurant['location'], // Pass the location
-                                              'category': restaurant['category'], // Pass the category
-                                              'gender': restaurant['gender'],
-                                              'phoneNo': restaurant['phoneNo'],
-                                              'imageUrl': restaurant['imageUrl'],
-                                            },
-                                          ),
-                                        ),
-                                      );
-                                    } else if (result == 'Delete') {
-                                      // Delete action
-                                      _showDeleteConfirmationDialog(context, restaurant['id']);
-                                    }
-                                  },
-                                  itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-                                    PopupMenuItem<String>(
-                                      value: 'Update',
-                                      child: Text('Update'),
-                                    ),
-                                    PopupMenuItem<String>(
-                                      value: 'Delete',
-                                      child: Text('Delete'),
-                                    ),
-                                  ],
-                                  icon: Icon(
-                                    Icons.more_vert,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                              ),
-                            ),
-                            SizedBox(height: 3,),
                             ClipRRect(
                               borderRadius: BorderRadius.vertical(
                                 top: Radius.circular(6),
@@ -182,25 +131,66 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                                 ),
                               ),
                             ),
+                            Positioned(
+                              top: 3,
+                              right: 2,
+                              child: Container(
+                                padding: EdgeInsets.all(1), // Adjust padding as needed
+                                decoration: BoxDecoration(
+                                  color: Colors.orangeAccent, // Background color with opacity
+                                  shape: BoxShape.circle,
+                                ),
+                                child: PopupMenuButton<String>(
+                                  onSelected: (String result) {
+                                    if (result == 'Update') {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => RestaurantEditScreen(
+                                            restaurantId: restaurant['id'],
+                                            restaurantData: {
+                                              'name': restaurant['name'],
+                                              'address': restaurant['address'],
+                                              'ownerName': restaurant['ownerName'],
+                                              'location': restaurant['location'],
+                                              'category': restaurant['category'],
+                                              'gender': restaurant['gender'],
+                                              'phoneNo': restaurant['phoneNo'],
+                                              'imageUrl': restaurant['imageUrl'],
+                                            },
+                                          ),
+                                        ),
+                                      );
+                                    } else if (result == 'Delete') {
+                                      _showDeleteConfirmationDialog(context, restaurant['id']);
+                                    }
+                                  },
+                                  itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
+                                    PopupMenuItem<String>(
+                                      value: 'Update',
+                                      child: Text('Update'),
+                                    ),
+                                    PopupMenuItem<String>(
+                                      value: 'Delete',
+                                      child: Text('Delete'),
+                                    ),
+                                  ],
+                                  icon: Icon(
+                                    Icons.more_vert,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
                           ],
                         ),
                         SizedBox(height: screenHeight * 0.02),
                         Text(
                           'Restaurant Name: ${restaurant['name'] ?? 'No restaurant name'}',
-                          style: TextStyle(
-                            fontSize: screenWidth * 0.05,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        Text(
-                          'Owner: ${restaurant['ownerName'] ?? 'No owner'}',
-                          style: TextStyle(
-                            fontSize: screenWidth * 0.05,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.black87,
-                          ),
-                        ),
+                        Text('Owner Name: ${restaurant['ownerName'] ?? 'No owner'}'),
                         Text('Address: ${restaurant['address'] ?? 'No address'}'),
                         Text('Location: ${restaurant['location'] ?? 'No location'}'),
                         Text('PhoneNo: ${restaurant['phoneNo'] ?? 'No phoneNo'}'),
@@ -238,7 +228,6 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                                   ),
                                 ),
                               ),
-                              SizedBox(height: screenHeight * 0.02),
                             ],
                           ),
                       ],

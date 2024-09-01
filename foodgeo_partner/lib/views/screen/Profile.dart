@@ -6,6 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import 'RestaurantListScreen.dart';
+
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
 
@@ -34,8 +36,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             .doc(_currentUser!.uid)
             .get();
         setState(() {
-          userName = userDoc['name'];  // Fetch user's name
-          userProfileImage = userDoc['imageUrl'];  // Fetch user's profile image URL
+          userName = userDoc['name'];
+          userProfileImage = userDoc['imageUrl'];
         });
       } catch (e) {
         print('Error fetching user data: $e');
@@ -49,7 +51,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          // Header section
           Container(
             width: double.infinity,
             height: 260,
@@ -67,14 +68,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   backgroundColor: Colors.white,
                   backgroundImage: userProfileImage != null
                       ? NetworkImage(userProfileImage!)
-                      : null,  // Use user's profile image or show an icon if null
+                      : null,
                   child: userProfileImage == null
                       ? const Icon(Icons.person, size: 50, color: Color(0xFFFFA726))
                       : null,
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  userName ?? 'Loading...',  // Show user's name or "Loading..." while data is fetched
+                  userName ?? 'Loading...',
                   style: GoogleFonts.poppins(
                     color: Colors.white,
                     fontSize: 24,
@@ -90,25 +91,29 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: ListView(
               children: [
                 _buildMenuItem(Icons.person, 'My Profile', () {
-                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProfileUpdateScreen(),));
-
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileUpdateScreen(),));
                 }),
-
                 _buildMenuItem(Icons.restaurant_menu, 'Register Your Restaurant', () {
-                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => RestaurantRegistrationPage(),));
-                }),
-                // Assuming you have a variable isVerified that checks if the user is verified
-
-
-                _buildMenuItem(Icons.receipt, 'Orders', () {
-                  // Navigate to Orders Screen
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => RestaurantListScreen()));
                 }),
 
+                // Notification item with switch
+                SwitchListTile(
+                  title: Text(
+                    'Notification',
+                    style: GoogleFonts.poppins(fontSize: 18, color: Colors.black87),
+                  ),
+                  secondary: Icon(Icons.notifications, color: Colors.black26),
+                  value: switchValue,
+                  onChanged: (bool value) {
+                    setState(() {
+                      switchValue = value;
+                    });
+                  },
+                  activeColor: Color(0xFFFFA726),
+                ),
 
-                _buildMenuItem(Icons.settings, 'Settings', () {
-                  // Navigate to Settings Screen
-                }),
-                Divider(),
+                const Divider(),
                 _buildMenuItem(Icons.exit_to_app, 'Logout', () {
                   _showLogoutDialog(context);
                 }),
@@ -131,36 +136,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildMenuItemWithSwitch(IconData icon, String title) {
-    return ListTile(
-      leading: Icon(icon, color: Colors.black54),
-      title: Text(
-        title,
-        style: GoogleFonts.poppins(fontSize: 18, color: Colors.black87),
-      ),
-      trailing: Switch(
-        value: switchValue,
-        onChanged: (bool newValue) {
-          setState(() {
-            switchValue = newValue;
-          });
-        },
-        activeColor: Colors.orange,
-      ),
-    );
-  }
-
   void _showLogoutDialog(BuildContext context) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: Text(
+          title: const Text(
             "Are you sure you want to logout?",
             style: TextStyle(
               color: Colors.black,
               fontWeight: FontWeight.bold,
-              fontSize: 15
+              fontSize: 15,
             ),
           ),
           actions: [
@@ -172,15 +158,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     MaterialPageRoute(
                         builder: (context) => PhoneAuthView()));
                 ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text("You have logged out")));
+                    const SnackBar(content: Text("You have logged out")));
               },
-              child: Text("logout"),
+              child: const Text("Logout"),
             ),
             TextButton(
               onPressed: () {
                 Navigator.pop(context);
               },
-              child: Text("Cancel"),
+              child: const Text("Cancel"),
             ),
           ],
         );
@@ -188,4 +174,3 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 }
-

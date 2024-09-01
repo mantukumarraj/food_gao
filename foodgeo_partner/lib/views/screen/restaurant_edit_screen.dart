@@ -2,8 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import '../../controller/restaurant_registration_controller.dart'; // Ensure this path is correct
-import '../../widget/custom_text_field.dart';
+import '../../controller/restaurant_registration_controller.dart';
+import '../widget/costum_textfeld.dart';
 
 class RestaurantEditScreen extends StatefulWidget {
   final String restaurantId;
@@ -13,10 +13,10 @@ class RestaurantEditScreen extends StatefulWidget {
 
   @override
   _RestaurantEditScreenState createState() => _RestaurantEditScreenState();
-}
+  }
 
-class _RestaurantEditScreenState extends State<RestaurantEditScreen> {
-  final RegisterControllers _controller = RegisterControllers(); // Use the correct controller instance
+  class _RestaurantEditScreenState extends State<RestaurantEditScreen> {
+  final RegisterControllers _controller = RegisterControllers();
   File? _selectedImage;
   bool _isLoading = false;
   String? _errorMessage;
@@ -30,11 +30,10 @@ class _RestaurantEditScreenState extends State<RestaurantEditScreen> {
     _controller.addressController.text = widget.restaurantData['address'] ?? '';
     _controller.ownerNameController.text = widget.restaurantData['ownerName'] ?? '';
     _controller.locationController.text = widget.restaurantData['location'] ?? '';
-    _controller.phonenoController.text = widget.restaurantData['phoneNo'] ?? ''; // Now correctly initialized
+    _controller.phonenoController.text = widget.restaurantData['phoneNo'] ?? '';
     _selectedCategory = widget.restaurantData['category'] ?? '';
     _selectedGender = widget.restaurantData['gender'] ?? '';
   }
-
 
 
   @override
@@ -105,28 +104,24 @@ class _RestaurantEditScreenState extends State<RestaurantEditScreen> {
                 labelText: 'Restaurant Name',
                 icon: Icons.restaurant,
                 controller: _controller.nameController,
-                validator: (value) {},
               ),
               SizedBox(height: 20),
               CustomTextField(
                 labelText: 'Address',
                 icon: Icons.home,
                 controller: _controller.addressController,
-                validator: (value) {},
               ),
               SizedBox(height: 20),
               CustomTextField(
                 labelText: 'Owner Name',
                 icon: Icons.person,
                 controller: _controller.ownerNameController,
-                validator: (value) {},
               ),
               SizedBox(height: 20),
               CustomTextField(
                 labelText: 'Location',
                 icon: Icons.location_on,
                 controller: _controller.locationController,
-                validator: (value) {},
               ),
               SizedBox(height: 20),
               Column(
@@ -183,18 +178,16 @@ class _RestaurantEditScreenState extends State<RestaurantEditScreen> {
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(10),
                 ],
-                validator: (value) {},
               ),
               SizedBox(height: 20),
               DropdownButtonFormField<String>(
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: "Select Restaurant Category",
                   prefixIcon: Icon(Icons.category),
                   border: OutlineInputBorder(),
                 ),
                 value: _selectedCategory,
-                items: ['Fast Food', 'Casual Dining', 'Fine Dining', 'Cafe', 'Buffet', 'Food Truck']
-                    .map((String category) {
+                items: ['Fast Food', 'Casual Dining', 'Fine Dining', 'Cafe', 'Buffet', 'Food Truck'].map((String category) {
                   return DropdownMenuItem<String>(
                     value: category,
                     child: Text(category),
@@ -291,37 +284,36 @@ class _RestaurantEditScreenState extends State<RestaurantEditScreen> {
     });
 
     try {
-      // Assuming you have an instance of RestaurantRegistrationController or equivalent
-      await RegisterControllers().updateRestaurant(
+      await _controller.updateRestaurant(
+        restaurantId: widget.restaurantId,
         name: _controller.nameController.text,
         address: _controller.addressController.text,
         ownerName: _controller.ownerNameController.text,
-        location: _controller.locationController.text,
         phoneNo: _controller.phonenoController.text,
-        category: _selectedCategory!,
+        location: _controller.locationController.text,
         gender: _selectedGender!,
-        imageFile: _selectedImage, restaurantId:widget.restaurantId,
+        category: _selectedCategory!,
+        image: _selectedImage,
       );
-
-      setState(() {
-        _isLoading = false;
-      });
-
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Restaurant updated successfully!')),
+        SnackBar(
+          content: Text("Restaurant updated successfully."),
+        ),
       );
-
       Navigator.pop(context);
-
     } catch (e) {
       setState(() {
-        _isLoading = false;
         _errorMessage = e.toString();
       });
-
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to update restaurant. $_errorMessage')),
+        SnackBar(
+          content: Text("Failed to update restaurant: ${_errorMessage}"),
+        ),
       );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 }

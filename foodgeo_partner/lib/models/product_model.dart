@@ -17,6 +17,8 @@ class Product {
     required this.imageUrl,
     required this.timestamp,
     required this.userId,
+
+
   });
 
   factory Product.fromFirestore(DocumentSnapshot doc) {
