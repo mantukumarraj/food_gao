@@ -4,7 +4,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:uuid/uuid.dart';
-
 class RegisterControllers {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
@@ -14,6 +13,7 @@ class RegisterControllers {
   final TextEditingController phonenoController = TextEditingController();
   String category = '';
 
+  // Register a new restaurant
   Future<void> registerUser(String gender, File image) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -36,7 +36,7 @@ class RegisterControllers {
         'imageUrl': imageUrl,
         'restaurantId': restaurantId,
         'verification': false,
-        'partnerId': user.uid,
+        'userId': user.uid,
       };
 
       await FirebaseFirestore.instance
@@ -72,7 +72,7 @@ class RegisterControllers {
 
     final querySnapshot = await FirebaseFirestore.instance
         .collection('restaurants')
-        .where('partnerId', isEqualTo: user.uid)
+        .where('userId', isEqualTo: user.uid)
         .get();
 
     final restaurants = querySnapshot.docs.map((doc) => {

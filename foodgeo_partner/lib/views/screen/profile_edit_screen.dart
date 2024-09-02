@@ -37,7 +37,7 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
       }
 
       var userData = await FirebaseFirestore.instance
-          .collection('partners')
+          .collection('users')
           .doc(user.uid)
           .get();
       if (userData.exists) {
@@ -98,7 +98,23 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
                 _pickImageFromCamera();
               },
             ),
-
+            ListTile(
+              leading: const Icon(Icons.delete),
+              title: const Text('Delete Photo'),
+              onTap: () {
+                setState(() {
+                  _imageFile = null;
+                });
+                Navigator.of(context).pop();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.cancel),
+              title: const Text('Cancel'),
+              onTap: () {
+                Navigator.of(context).pop();
+              },
+            ),
           ],
         );
       },
@@ -109,7 +125,7 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
     try {
       final Reference storageRef = FirebaseStorage.instance.ref();
       final Reference imageRef = storageRef
-          .child('partner_images/${DateTime.now().millisecondsSinceEpoch}.jpg');
+          .child('user_images/${DateTime.now().millisecondsSinceEpoch}.jpg');
       await imageRef.putFile(imageFile);
       final String imageUrl = await imageRef.getDownloadURL();
       return imageUrl;
@@ -143,7 +159,10 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
         imageUrl = await _uploadImageToFirebaseStorage(_imageFile!) ?? '';
       }
 
-      await FirebaseFirestore.instance.collection('partners').doc(user.uid).update({
+      await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .update({
         'name': name,
         'age': age,
         'gender': gender,
@@ -151,13 +170,7 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
         'imageUrl': imageUrl,
       });
 
-      // Update ke baad success message show kare
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully!')),
-      );
-
-      Navigator.pop(context); // Back to the previous screen
-
+      Navigator.pop(context);
     } catch (e) {
       print('Error updating profile: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -165,7 +178,6 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
       );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -389,7 +401,7 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
                   ElevatedButton(
                     onPressed: _submitUpdates,
                     child: Text(
-                      'Profile Update ',
+                      'Update Profile',
                       style: TextStyle(
                         color: Colors.white,
                       ),

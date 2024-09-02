@@ -19,9 +19,10 @@ class _SplashScreenState extends State<SplashScreen> {
       User? user = FirebaseAuth.instance.currentUser;
       if (user != null) {
         DocumentSnapshot userDoc = await FirebaseFirestore.instance
-            .collection('partners')
+            .collection('users')
             .doc(user.uid)
             .get();
+
         if (userDoc.exists) {
           Navigator.pushReplacement(
             context,
