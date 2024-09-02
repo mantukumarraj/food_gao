@@ -3,7 +3,7 @@ import 'package:foodgeo_partner/product/product_list_screen.dart';
 import 'package:foodgeo_partner/views/screen/RestaurantListScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:carousel_slider/carousel_slider.dart';import '../../product/ProductDetailScreen.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import 'Profile.dart';
 import 'order_screen.dart';
 
@@ -37,7 +37,7 @@ class _HomePageState extends State<HomePage> {
 
       QuerySnapshot restaurantDocs = await FirebaseFirestore.instance
           .collection('restaurants')
-          .where('userId', isEqualTo: currentUserId)
+          .where('partnerId', isEqualTo: currentUserId)
           .get();
 
       List<Map<String, dynamic>> restaurants = restaurantDocs.docs
@@ -58,7 +58,7 @@ class _HomePageState extends State<HomePage> {
 
       QuerySnapshot productDocs = await FirebaseFirestore.instance
           .collection('products')
-          .where('userId', isEqualTo: currentUserId)
+          .where('partnerId', isEqualTo: currentUserId)
           .get();
 
       List<Map<String, dynamic>> products = productDocs.docs
@@ -327,7 +327,7 @@ class _HomePageState extends State<HomePage> {
                       context,
                       MaterialPageRoute(
                         builder: (context) =>
-                            ProductDetailScreen(product: product),
+                            ProductListScreen(restaurantId: '',),
                       ),
                     );
                   },

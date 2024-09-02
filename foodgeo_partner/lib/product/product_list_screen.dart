@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import '../views/screen/restaurant_register_screen.dart';
 import 'edit_product_screen.dart';
 
 class ProductListScreen extends StatelessWidget {
@@ -42,10 +41,7 @@ class ProductListScreen extends StatelessWidget {
             return Center(child: Text('Error: ${restaurantSnapshot.error}'));
           } else if (!restaurantSnapshot.hasData ||
               !restaurantSnapshot.data!.exists) {
-            return Center(child:
-            TextButton(onPressed: () {
-              // Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) =>RestaurantRegistrationPage() ));
-            }, child: Text("Add Resturant")));
+            return Center(child: Text('Restaurant not found.'));
           } else {
             var restaurantData =
                 restaurantSnapshot.data!.data() as Map<String, dynamic>;

@@ -120,7 +120,7 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
     try {
       final Reference storageRef = FirebaseStorage.instance.ref();
       final Reference imageRef = storageRef
-          .child('user_images/${DateTime.now().millisecondsSinceEpoch}.jpg');
+          .child('partner_images/${DateTime.now().millisecondsSinceEpoch}.jpg');
       await imageRef.putFile(imageFile);
       final String imageUrl = await imageRef.getDownloadURL();
       return imageUrl;

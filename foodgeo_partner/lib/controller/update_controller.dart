@@ -43,7 +43,7 @@ class UpdateController {
 
     String imageUrl = '';
     if (image != null) {
-      TaskSnapshot uploadTask = await _storage.ref('user_images/${user.uid}').putFile(image);
+      TaskSnapshot uploadTask = await _storage.ref('partner_images/${user.uid}').putFile(image);
       imageUrl = await uploadTask.ref.getDownloadURL();
     }
 

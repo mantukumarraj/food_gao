@@ -52,11 +52,11 @@ class _DrawerWidgetState extends State<DrawerWidget> {
 
     DocumentReference docRef;
     if (user.email != null && user.email!.contains('@restaurant.com')) {
-      // For restaurant users
+      // For restaurant partners
       docRef = FirebaseFirestore.instance.collection('restaurants').doc(user.uid);
     } else {
       // For regular users
-      docRef = FirebaseFirestore.instance.collection('users').doc(user.uid);
+      docRef = FirebaseFirestore.instance.collection('partners').doc(user.uid);
     }
 
     DocumentSnapshot doc = await docRef.get();

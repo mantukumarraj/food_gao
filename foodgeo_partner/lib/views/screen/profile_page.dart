@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:foodgeo_partner/views/screen/phone_verification_screen.dart';
+import 'package:foodgeo_partner/views/screen/profile_edit_screen.dart';
 import 'package:foodgeo_partner/views/screen/restaurant_register_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -15,6 +17,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool switchValue = true;
   String? userName;
   String? userProfileImage;
+  bool isRestaurantRegistered = false;
 
   User? get _currentUser => FirebaseAuth.instance.currentUser;
 
@@ -28,12 +31,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_currentUser != null) {
       try {
         DocumentSnapshot userDoc = await FirebaseFirestore.instance
-            .collection('users')
+            .collection('partners')
             .doc(_currentUser!.uid)
             .get();
+
+        // Check if restaurant is already registered
+        QuerySnapshot restaurantQuery = await FirebaseFirestore.instance
+            .collection('restaurants')
+            .where('partnerId', isEqualTo: _currentUser!.uid)
+            .get();
+
         setState(() {
-          userName = userDoc['name']; // Fetch user's name
-          userProfileImage = userDoc['imageUrl']; // Fetch user's profile image URL
+          userName = userDoc['name'];
+          userProfileImage = userDoc['imageUrl'];
+          isRestaurantRegistered = restaurantQuery.docs.isNotEmpty; // Check if restaurant is registered
         });
       } catch (e) {
         print('Error fetching user data: $e');
@@ -47,14 +58,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          // Header section
           Container(
             width: double.infinity,
             height: 260,
             decoration: const BoxDecoration(
               color: Color(0xFFFFA726),
               borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(100),
+                bottomLeft: Radius.circular(80),
               ),
             ),
             child: Column(
@@ -65,15 +75,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   backgroundColor: Colors.white,
                   backgroundImage: userProfileImage != null
                       ? NetworkImage(userProfileImage!)
-                      : null, // Use user's profile image or show an icon if null
+                      : null,
                   child: userProfileImage == null
                       ? const Icon(Icons.person, size: 50, color: Color(0xFFFFA726))
                       : null,
                 ),
                 const SizedBox(height: 10),
                 Text(
-                  userName ?? 'Loading...', // Show user's name or "Loading..." while data is fetched
-                  style: const TextStyle(
+                  userName ?? 'Loading...',
+                  style: GoogleFonts.poppins(
                     color: Colors.white,
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
@@ -88,22 +98,42 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: ListView(
               children: [
                 _buildMenuItem(Icons.person, 'My Profile', () {
-                  // Navigate to My Profile Screen
-                }),
-                _buildMenuItem(Icons.restaurant_menu, 'Register Your Restaurant', () {
-                  Navigator.pushReplacement(
+                  Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>  RestaurantRegistrationPage(),
+                      builder: (context) => ProfileUpdateScreen(),
                     ),
                   );
                 }),
-                _buildMenuItem(Icons.receipt, 'Orders', () {
-                  // Navigate to Orders Screen
+                _buildMenuItem(Icons.restaurant_menu, 'Register Your Restaurant', () {
+                  if (isRestaurantRegistered) {
+                    _showAlreadyRegisteredMessage();
+                  } else {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => RestaurantRegistrationPage(),
+                      ),
+                    );
+                  }
                 }),
-                _buildMenuItem(Icons.settings, 'Settings', () {
-                  // Navigate to Settings Screen
-                }),
+
+                // Notification item with switch
+                SwitchListTile(
+                  title: Text(
+                    'Notification',
+                    style: GoogleFonts.poppins(fontSize: 18, color: Colors.black87),
+                  ),
+                  secondary: Icon(Icons.notifications, color: Colors.black26),
+                  value: switchValue,
+                  onChanged: (bool value) {
+                    setState(() {
+                      switchValue = value;
+                    });
+                  },
+                  activeColor: Color(0xFFFFA726),
+                ),
+
                 const Divider(),
                 _buildMenuItem(Icons.exit_to_app, 'Logout', () {
                   _showLogoutDialog(context);
@@ -118,12 +148,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Widget _buildMenuItem(IconData icon, String title, [VoidCallback? onTap]) {
     return ListTile(
-      leading: Icon(icon, color: Colors.black87),
+      leading: Icon(icon, color: Colors.black26),
       title: Text(
         title,
-        style: const TextStyle(fontSize: 18, color: Colors.black87),
+        style: GoogleFonts.poppins(fontSize: 18, color: Colors.black87),
       ),
       onTap: onTap ?? () {},
+    );
+  }
+
+  void _showAlreadyRegisteredMessage() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text("You have already registered a restaurant."),
+      ),
     );
   }
 
@@ -145,14 +183,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
               onPressed: () async {
                 await FirebaseAuth.instance.signOut();
                 Navigator.pushReplacement(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) =>  PhoneAuthView(),
-                  ),
-                );
+                    context,
+                    MaterialPageRoute(
+                        builder: (context) => PhoneAuthView()));
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text("You have logged out")),
-                );
+                    const SnackBar(content: Text("You have logged out")));
               },
               child: const Text("Logout"),
             ),
