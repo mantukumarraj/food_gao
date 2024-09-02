@@ -268,7 +268,7 @@ class _ProductEditState extends State<ProductEdit> {
                     borderRadius: BorderRadius.circular(8.0),
                   ),
                   child: Text(
-                    'Update Product',
+                    ' Product Update',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 16,

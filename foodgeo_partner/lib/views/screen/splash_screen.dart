@@ -22,6 +22,7 @@ class _SplashScreenState extends State<SplashScreen> {
             .collection('partners')
             .doc(user.uid)
             .get();
+
         if (userDoc.exists) {
           Navigator.pushReplacement(
             context,

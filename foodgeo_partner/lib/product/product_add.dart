@@ -7,9 +7,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
 import '../views/screen/home_page.dart';
 
-
-
-
 class ProductAdd extends StatefulWidget {
   final String restaurantId;
 
@@ -348,7 +345,7 @@ class _ProductAddState extends State<ProductAdd> {
                     valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
                   )
                       : Text(
-                    'Add Product',
+                    ' Product Add',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 16.0,

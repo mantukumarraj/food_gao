@@ -4,6 +4,7 @@ import 'package:foodgeo_partner/views/screen/RestaurantListScreen.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import '../../product/productDetail_screen.dart';
 import 'Profile.dart';
 import 'order_screen.dart';
 
@@ -327,7 +328,7 @@ class _HomePageState extends State<HomePage> {
                       context,
                       MaterialPageRoute(
                         builder: (context) =>
-                            ProductListScreen(restaurantId: '',),
+                            ProductDetailScreen(product: product),
                       ),
                     );
                   },
@@ -338,7 +339,7 @@ class _HomePageState extends State<HomePage> {
                     elevation: 4,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Padding(
                           padding: const EdgeInsets.all(8.0),

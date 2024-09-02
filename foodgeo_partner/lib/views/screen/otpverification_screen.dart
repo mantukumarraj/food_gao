@@ -93,7 +93,7 @@ class _OtpScreenState extends State<OtpScreen> {
   Future<bool> _checkIfFirstLogin(User user) async {
     try {
       final DocumentSnapshot userDoc = await FirebaseFirestore.instance
-          .collection('users')
+          .collection('partners')
           .doc(user.uid)
           .get();
 

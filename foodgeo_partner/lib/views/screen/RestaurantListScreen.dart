@@ -118,7 +118,7 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                   SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
-                     Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => RestaurantRegistrationPage(),)); // Replace with your registration page route
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => RestaurantRegistrationPage(),));// Replace with your registration page route
                     },
                     child: Text('Register Your Restaurant'),
                   ),
@@ -262,7 +262,7 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                                       borderRadius: BorderRadius.circular(8.0),
                                     ),
                                     child: Text(
-                                      'Add Product',
+                                      ' Product Add',
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 16,
