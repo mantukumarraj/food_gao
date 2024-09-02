@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:foodgeo_partner/product/product_add.dart';
 import 'package:foodgeo_partner/views/screen/phone_verification_screen.dart';
 import 'package:foodgeo_partner/views/screen/profile_page.dart';
 import 'package:foodgeo_partner/views/screen/update_page.dart';
 import '../views/screen/RestaurantListScreen.dart';
 import '../views/screen/restaurant_register_screen.dart';
-import '../views/screen/upload_screen.dart';
 
 class DrawerWidget extends StatefulWidget {
   const DrawerWidget({super.key});
@@ -135,7 +135,7 @@ class _DrawerWidgetState extends State<DrawerWidget> {
                 Navigator.pushReplacement(
                     context,
                     MaterialPageRoute(
-                        builder: (context) => AddProductScreen()));
+                        builder: (context) => const ProductAdd(restaurantId: '',)));
               },
             ),
           ListTile(

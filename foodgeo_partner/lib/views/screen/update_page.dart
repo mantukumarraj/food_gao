@@ -4,9 +4,8 @@ import 'package:flutter/material.dart';
 
 import 'package:foodgeo_partner/controller/update_controller.dart'; // Ensure this controller handles updates
 import '../../widget/image_picker.dart';
-import '../widget/costum_buttom.dart';
 import '../widget/costum_textfeld.dart';
-import 'home_screen.dart';
+import 'home_page.dart';
 
 class UpdatePage extends StatefulWidget {
   @override
@@ -158,34 +157,34 @@ class _UpdatePageState extends State<UpdatePage> {
                     if (_isLoading)
                       CircularProgressIndicator(),
                     if (!_isLoading)
-                      CustomButton(
-                        text: "Update",
-                        onPressed: () async {
-                          setState(() {
-                            _isLoading = true;
-                          });
-                          try {
-                            await _controller.updateUserProfile(
-                              _controller.nameController.text,
-                              _controller.addressController.text,
-                              _selectedGender,
-                              _selectedImage!,
-                            );
-                            Navigator.pushReplacement(
-                              context,
-                              MaterialPageRoute(builder: (context) => HomePage()),
-                            );
-                          } catch (e) {
-                            // Handle errors if needed
-                          } finally {
-                            setState(() {
-                              _isLoading = false;
-                            });
-                          }
-                        },
-                        height: screenHeight * 0.07,
-                        width: screenWidth * 0.8,
-                      ),
+                      // CustomButton(
+                      //   text: "Update",
+                      //   onPressed: () async {
+                      //     setState(() {
+                      //       _isLoading = true;
+                      //     });
+                      //     try {
+                      //       await _controller.updateUserProfile(
+                      //         _controller.nameController.text,
+                      //         _controller.addressController.text,
+                      //         _selectedGender,
+                      //         _selectedImage!,
+                      //       );
+                      //       Navigator.pushReplacement(
+                      //         context,
+                      //         MaterialPageRoute(builder: (context) => HomePage()),
+                      //       );
+                      //     } catch (e) {
+                      //       // Handle errors if needed
+                      //     } finally {
+                      //       setState(() {
+                      //         _isLoading = false;
+                      //       });
+                      //     }
+                      //   },
+                      //   height: screenHeight * 0.07,
+                      //   width: screenWidth * 0.8,
+                      // ),
                     SizedBox(height: screenHeight * 0.05),
                     TextButton(
                       onPressed: () {

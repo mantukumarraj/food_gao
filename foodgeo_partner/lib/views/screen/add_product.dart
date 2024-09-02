@@ -6,8 +6,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
 
-import 'home_screen.dart'; // Replace with the actual import path of your HomePage
-
+import 'home_page.dart';
 class ProductAdd extends StatefulWidget {
   final String restaurantId;
 
