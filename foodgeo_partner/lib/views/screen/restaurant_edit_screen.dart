@@ -13,9 +13,9 @@ class RestaurantEditScreen extends StatefulWidget {
 
   @override
   _RestaurantEditScreenState createState() => _RestaurantEditScreenState();
-  }
+}
 
-  class _RestaurantEditScreenState extends State<RestaurantEditScreen> {
+class _RestaurantEditScreenState extends State<RestaurantEditScreen> {
   final RegisterControllers _controller = RegisterControllers();
   File? _selectedImage;
   bool _isLoading = false;
