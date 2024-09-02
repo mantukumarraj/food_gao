@@ -36,7 +36,7 @@ class RegisterControllers {
         'imageUrl': imageUrl,
         'restaurantId': restaurantId,
         'verification': false,
-        'partnerId': user.uid,
+        'userId': user.uid,
       };
 
       await FirebaseFirestore.instance
@@ -72,7 +72,7 @@ class RegisterControllers {
 
     final querySnapshot = await FirebaseFirestore.instance
         .collection('restaurants')
-        .where('partnerId', isEqualTo: user.uid)
+        .where('userId', isEqualTo: user.uid)
         .get();
 
     final restaurants = querySnapshot.docs.map((doc) => {

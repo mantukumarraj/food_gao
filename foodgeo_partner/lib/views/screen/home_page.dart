@@ -38,7 +38,7 @@ class _HomePageState extends State<HomePage> {
 
       QuerySnapshot restaurantDocs = await FirebaseFirestore.instance
           .collection('restaurants')
-          .where('partnerId', isEqualTo: currentUserId)
+          .where('userId', isEqualTo: currentUserId)
           .get();
 
       List<Map<String, dynamic>> restaurants = restaurantDocs.docs
@@ -59,7 +59,7 @@ class _HomePageState extends State<HomePage> {
 
       QuerySnapshot productDocs = await FirebaseFirestore.instance
           .collection('products')
-          .where('partnerId', isEqualTo: currentUserId)
+          .where('userId', isEqualTo: currentUserId)
           .get();
 
       List<Map<String, dynamic>> products = productDocs.docs

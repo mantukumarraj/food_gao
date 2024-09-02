@@ -37,7 +37,7 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
       }
 
       var userData = await FirebaseFirestore.instance
-          .collection('partners')
+          .collection('users')
           .doc(user.uid)
           .get();
       if (userData.exists) {
@@ -98,8 +98,23 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
                 _pickImageFromCamera();
               },
             ),
-
-
+            ListTile(
+              leading: const Icon(Icons.delete),
+              title: const Text('Delete Photo'),
+              onTap: () {
+                setState(() {
+                  _imageFile = null;
+                });
+                Navigator.of(context).pop();
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.cancel),
+              title: const Text('Cancel'),
+              onTap: () {
+                Navigator.of(context).pop();
+              },
+            ),
           ],
         );
       },
@@ -145,7 +160,7 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
       }
 
       await FirebaseFirestore.instance
-          .collection('partners')
+          .collection('users')
           .doc(user.uid)
           .update({
         'name': name,

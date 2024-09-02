@@ -17,7 +17,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   bool switchValue = true;
   String? userName;
   String? userProfileImage;
-  bool isRestaurantRegistered = false;
 
   User? get _currentUser => FirebaseAuth.instance.currentUser;
 
@@ -31,20 +30,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (_currentUser != null) {
       try {
         DocumentSnapshot userDoc = await FirebaseFirestore.instance
-            .collection('partners')
+            .collection('users')
             .doc(_currentUser!.uid)
             .get();
-
-        // Check if restaurant is already registered
-        QuerySnapshot restaurantQuery = await FirebaseFirestore.instance
-            .collection('restaurants')
-            .where('partnerId', isEqualTo: _currentUser!.uid)
-            .get();
-
         setState(() {
           userName = userDoc['name'];
           userProfileImage = userDoc['imageUrl'];
-          isRestaurantRegistered = restaurantQuery.docs.isNotEmpty; // Check if restaurant is registered
         });
       } catch (e) {
         print('Error fetching user data: $e');
@@ -98,24 +89,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: ListView(
               children: [
                 _buildMenuItem(Icons.person, 'My Profile', () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ProfileUpdateScreen(),
-                    ),
-                  );
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileUpdateScreen(),));
                 }),
                 _buildMenuItem(Icons.restaurant_menu, 'Register Your Restaurant', () {
-                  if (isRestaurantRegistered) {
-                    _showAlreadyRegisteredMessage();
-                  } else {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => RestaurantRegistrationPage(),
-                      ),
-                    );
-                  }
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => RestaurantRegistrationPage(),));
                 }),
 
                 // Notification item with switch
@@ -154,14 +131,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         style: GoogleFonts.poppins(fontSize: 18, color: Colors.black87),
       ),
       onTap: onTap ?? () {},
-    );
-  }
-
-  void _showAlreadyRegisteredMessage() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text("You have already registered a restaurant."),
-      ),
     );
   }
 
