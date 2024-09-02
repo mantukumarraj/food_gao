@@ -22,7 +22,9 @@ class _HomePageState extends State<HomePage> {
   List<Map<String, dynamic>> _filteredProducts = [];
   String _searchText = '';
   int _selectedIndex = 0;
-  bool _showAllProducts = false; // Add this flag
+  bool _showAllProducts = false;
+
+
 
   @override
   void initState() {
@@ -104,13 +106,11 @@ class _HomePageState extends State<HomePage> {
       _fetchProducts();
     });
   }
-
   void _toggleShowAllProducts() {
     setState(() {
       _showAllProducts = !_showAllProducts;
     });
   }
-
   @override
   Widget build(BuildContext context) {
     final List<Widget> _pages = [
@@ -122,6 +122,7 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: _selectedIndex == 0
           ? AppBar(
+                automaticallyImplyLeading: false,
               title: Container(
                 padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 0.0),
                 margin: EdgeInsets.all(5.0),
@@ -156,6 +157,7 @@ class _HomePageState extends State<HomePage> {
           : null,
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.white,
         type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(

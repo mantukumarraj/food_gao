@@ -33,7 +33,7 @@ class _SplashScreenState extends State<SplashScreen> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => RegistrationPage(phoneNumber: phoneNumber),
+              builder: (context) => PhoneAuthView(),
             ),
           );
         }
@@ -45,6 +45,7 @@ class _SplashScreenState extends State<SplashScreen> {
       }
     });
   }
+
 
   @override
   Widget build(BuildContext context) {
@@ -58,11 +59,11 @@ class _SplashScreenState extends State<SplashScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
-                'FoodGao',
+                'FoodGao Partner',
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: Colors.white,
-                  fontSize: 50,
+                  fontSize: 30,
                   fontWeight: FontWeight.bold,
                 ),
               ),

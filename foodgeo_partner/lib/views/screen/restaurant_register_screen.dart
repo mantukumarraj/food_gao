@@ -7,20 +7,21 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:location/location.dart' as loc;
 import 'package:geocoding/geocoding.dart' as geo;
-
 import '../../controller/restaurant_registration_controller.dart';
 import '../widget/costum_textfeld.dart';
 import 'package:flutter/services.dart';
 
 class RestaurantRegistrationPage extends StatefulWidget {
   @override
-  _RestaurantRegistrationPageState createState() => _RestaurantRegistrationPageState();
+  _RestaurantRegistrationPageState createState() =>
+      _RestaurantRegistrationPageState();
 }
 
-class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage> {
+class _RestaurantRegistrationPageState
+    extends State<RestaurantRegistrationPage> {
   final RegisterControllers _controller = RegisterControllers();
-  final Completer<GoogleMapController> _mapcontroller = Completer<GoogleMapController>();
-
+  final Completer<GoogleMapController> _mapcontroller =
+  Completer<GoogleMapController>();
 
   File? _selectedImage;
   bool _isLoading = false;
@@ -29,6 +30,10 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
   final _formKey = GlobalKey<FormState>();
   bool _isDropdownExpanded = false;
   bool _isSearching = false;
+  bool _isLocationSelected = false;
+  String _selectedAddress = '';
+  bool _isLocationValid = true;
+  bool _isImageValid = true;
 
   static const CameraPosition _kGooglePlex = CameraPosition(
     target: LatLng(25.971588, 84.924759),
@@ -39,6 +44,20 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
   final Set<Polyline> _polyline = {};
   loc.LocationData? _currentLocation;
   TextEditingController _searchController = TextEditingController();
+
+  final ButtonStyle buttonStyle = ElevatedButton.styleFrom(
+    padding: const EdgeInsets.all(15),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+  ).copyWith(
+    backgroundColor: MaterialStateProperty.all<Color>(Colors.orange), // Ensures consistent color
+  );
+
+// Define the common loading indicator
+  final Widget loadingIndicator = const CircularProgressIndicator(
+    color: Colors.white,
+  );
 
   @override
   void initState() {
@@ -86,140 +105,16 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
           ),
         );
 
+        // Update _controller with current location
+        _controller.locationlongitudeController.text = currentLatLng.longitude.toString();
+        _controller.locationlatitudeController.text = currentLatLng.latitude.toString();
+
         setState(() {});
       }
     } catch (e) {
       print('Error getting location: $e');
     }
   }
-
-  // Future<void> _searchLocation(String query) async {
-  //   setState(() {
-  //     _isSearching = true;
-  //   });
-  //
-  //   final GoogleMapController controller = await _mapcontroller.future;
-  //   try {
-  //     // Use geocoding package to get the location from address
-  //     List<geo.Location> locations = await geo.locationFromAddress(query);
-  //
-  //     if (locations.isNotEmpty) {
-  //       final LatLng cityLocation = LatLng(locations.first.latitude, locations.first.longitude);
-  //
-  //       // Get the latitude and longitude of the searched location
-  //       double latitude = locations.first.latitude;  // Latitude
-  //       double longitude = locations.first.longitude;  // Longitude
-  //       _controller.locationlongitudeController.text = longitude as String;
-  //
-  //       // Fetch the address from the coordinates using reverse geocoding
-  //       List<geo.Placemark> placemarks = await geo.placemarkFromCoordinates(latitude, longitude);
-  //
-  //       String address = "";
-  //       if (placemarks.isNotEmpty) {
-  //         geo.Placemark place = placemarks.first;
-  //         address = "${place.name}, ${place.locality}, ${place.administrativeArea}, ${place.country}";
-  //         print('Searched Location Address: $address');
-  //         _controller.locationController.text =address;
-  //
-  //         // Store the address in locationController
-  //         // <-- Store the address here
-  //       }
-  //
-  //       // Move the camera to the searched location
-  //       await controller.animateCamera(CameraUpdate.newLatLngZoom(cityLocation, 12.0));
-  //
-  //       _markers.add(
-  //         Marker(
-  //           markerId: MarkerId('cityLocation'),
-  //           position: cityLocation,
-  //           infoWindow: InfoWindow(
-  //             title: query,
-  //             snippet: address, // Show address in snippet
-  //           ),
-  //         ),
-  //       );
-  //
-  //       // Calculate distance if current location is available
-  //       if (_currentLocation != null) {
-  //         double distanceInKm = Geolocator.distanceBetween(
-  //           _currentLocation!.latitude!,
-  //           _currentLocation!.longitude!,
-  //           cityLocation.latitude,
-  //           cityLocation.longitude,
-  //         ) / 1000;
-  //
-  //         ScaffoldMessenger.of(context).showSnackBar(
-  //           SnackBar(content: Text('Distance: ${distanceInKm.toStringAsFixed(2)} km')),
-  //         );
-  //       }
-  //       setState(() {});
-  //     } else {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(content: Text('Location not found')),
-  //       );
-  //     }
-  //   } catch (e) {
-  //     print('Error searching location: $e');
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text('Error: Unable to find the location')),
-  //     );
-  //   } finally {
-  //     setState(() {
-  //       _isSearching = false;
-  //     });
-  //   }
-  // }
-  // Future<void> _searchLocation(String query) async {
-  //   setState(() {
-  //     _isSearching = true;
-  //   });
-  //
-  //   final GoogleMapController controller = await _mapcontroller.future;
-  //   try {
-  //     List<geo.Location> locations = await geo.locationFromAddress(query);
-  //     if (locations.isNotEmpty) {
-  //       final LatLng cityLocation = LatLng(locations.first.latitude, locations.first.longitude);
-  //       await controller.animateCamera(CameraUpdate.newLatLngZoom(cityLocation, 12.0));
-  //
-  //       _markers.add(
-  //         Marker(
-  //           markerId: MarkerId('cityLocation'),
-  //           position: cityLocation,
-  //           infoWindow: InfoWindow(
-  //             title: query,
-  //           ),
-  //         ),
-  //       );
-  //
-  //       if (_currentLocation != null) {
-  //         double distanceInKm = Geolocator.distanceBetween(
-  //           _currentLocation!.latitude!,
-  //           _currentLocation!.longitude!,
-  //           cityLocation.latitude,
-  //           cityLocation.longitude,
-  //         ) / 1000;
-  //
-  //         ScaffoldMessenger.of(context).showSnackBar(
-  //           SnackBar(content: Text('Distance: ${distanceInKm.toStringAsFixed(2)} km')),
-  //         );
-  //       }
-  //       setState(() {});
-  //     } else {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(content: Text('Location not found')),
-  //       );
-  //     }
-  //   } catch (e) {
-  //     print('Error searching location: $e');
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text('Error: Unable to find the location')),
-  //     );
-  //   } finally {
-  //     setState(() {
-  //       _isSearching = false;
-  //     });
-  //   }
-  // }
 
   Future<void> _searchLocation(String query) async {
     setState(() {
@@ -233,10 +128,9 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
         final LatLng cityLocation = LatLng(locations.first.latitude, locations.first.longitude);
         await controller.animateCamera(CameraUpdate.newLatLngZoom(cityLocation, 12.0));
 
-        // Store the longitude in locationLongitudeController
+        // Update _controller with searched location
         _controller.locationlongitudeController.text = cityLocation.longitude.toString();
-
-        // Reverse geocoding to get the address before marker click
+        _controller.locationlatitudeController.text = cityLocation.latitude.toString();
         List<geo.Placemark> placemarks = await geo.placemarkFromCoordinates(
           cityLocation.latitude,
           cityLocation.longitude,
@@ -245,10 +139,12 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
         String address = "";
         if (placemarks.isNotEmpty) {
           geo.Placemark place = placemarks.first;
-          address = "${place.name}, ${place.locality},${place.administrativeArea}, ${place.country}";
-
-          // Store the address in locationController
+          address = "${place.name}, ${place.locality}, ${place.administrativeArea}, ${place.country}";
           _controller.locationController.text = address;
+          setState(() {
+            _isLocationSelected = true;
+            _selectedAddress = address;
+          });
         }
 
         _markers.add(
@@ -259,7 +155,6 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
               title: query,
             ),
             onTap: () async {
-              // Show a SnackBar with the address when marker is tapped
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('Address: $address')),
               );
@@ -309,7 +204,8 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar:AppBar(
+      backgroundColor: Colors.white,
+      appBar: AppBar(
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -333,8 +229,7 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
           },
         ),
       ),
-
-        body: SingleChildScrollView(
+      body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Form(
@@ -377,6 +272,10 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                     height: 200,
                     decoration: BoxDecoration(
                       color: Colors.grey[200],
+                      border: Border.all(
+                        color: _isImageValid ? Colors.grey : Colors.red,
+                        width: 1.0,
+                      ),
                       borderRadius: BorderRadius.circular(10.0),
                       image: _selectedImage != null
                           ? DecorationImage(
@@ -390,6 +289,14 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                         : null,
                   ),
                 ),
+                if (!_isImageValid)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: Text(
+                      'Please select a restaurant image',
+                      style: TextStyle(color: Colors.red, fontSize: 12),
+                    ),
+                  ),
                 SizedBox(height: 20),
                 CustomTextField(
                   labelText: 'Restaurant Name',
@@ -446,82 +353,96 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                   },
                 ),
                 SizedBox(height: 20),
+
+                DropdownButtonFormField<String>(
+                  value: _selectedGender,
+                  items: ['Male', 'Female'].map((gender) {
+                    return DropdownMenuItem(
+                      value: gender,
+                      child: Text(gender),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedGender = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    labelText: 'Gender',
+                    prefixIcon: Icon(Icons.people_alt_rounded),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please select a gender';
+                    }
+                    return null;
+                  },
+                ),
+
+                SizedBox(height: 20),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      "Gender",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _isDropdownExpanded = !_isDropdownExpanded;
+                        });
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: _isLocationValid ? Colors.grey : Colors.red,
+                            width: 1.0,
+                          ),
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        padding: EdgeInsets.all(8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _isLocationSelected
+                                    ? _selectedAddress
+                                    : 'Select outlet’s location on the map',
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Icon(
+                              _isDropdownExpanded
+                                  ? Icons.arrow_drop_up
+                                  : Icons.arrow_drop_down,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ListTile(
-                            title: const Text('Male'),
-                            leading: Radio<String>(
-                              value: 'Male',
-                              groupValue: _selectedGender,
-
-                              onChanged: (String? value) {
-                                setState(() {
-                                  _selectedGender = value;
-                                });
-                              },
-                            ),
-                          ),
+                    if (!_isLocationValid)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Text(
+                          'Please select a location',
+                          style: TextStyle(color: Colors.red, fontSize: 12),
                         ),
-                        Expanded(
-                          child: ListTile(
-                            title: const Text('Female'),
-                            leading: Radio<String>(
-                              value: 'Female',
-                              groupValue: _selectedGender,
-                              onChanged: (String? value) {
-                                setState(() {
-                                  _selectedGender = value;
-                                });
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
                   ],
                 ),
-                SizedBox(height: 20),
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _isDropdownExpanded = !_isDropdownExpanded;
-                    });
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.orange, width: 2.0),
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    padding: EdgeInsets.all(8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Select outlet’s location on the map',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                        Icon(
-                          _isDropdownExpanded ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-                        ),
-                      ],
-                    ),
-                  ),
+
+                SizedBox(
+                  height: 7,
                 ),
-                SizedBox(height: 7,),
                 AnimatedContainer(
                   duration: Duration(milliseconds: 300),
-                  height: _isDropdownExpanded ? MediaQuery.of(context).size.height * 0.5 : 0,
+                  height: _isDropdownExpanded
+                      ? MediaQuery.of(context).size.height * 0.5
+                      : 0,
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
@@ -531,27 +452,32 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                             controller: _searchController,
                             decoration: InputDecoration(
                               hintText: 'Enter your restaurant’s location',
-                              prefixIcon: Icon(Icons.search, color: Colors.grey),
+                              prefixIcon:
+                              Icon(Icons.search, color: Colors.grey),
                               suffixIcon: IconButton(
-                                icon: Icon(Icons.my_location, color: Colors.grey),
+                                icon:
+                                Icon(Icons.my_location, color: Colors.grey),
                                 onPressed: () {
                                   _getCurrentLocation();
                                 },
                               ),
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8.0), // Rounded corners
+                                borderRadius: BorderRadius.circular(8.0),
                                 borderSide: BorderSide.none,
                               ),
                               filled: true,
-                              fillColor: Colors.grey.shade200, // Light grey background color
-                              contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
+                              fillColor: Colors.grey.shade200,
+                              contentPadding: EdgeInsets.symmetric(
+                                  vertical: 15.0, horizontal: 20.0),
                             ),
                             onSubmitted: (query) {
                               _searchLocation(query);
                             },
                           ),
                         ),
-                        SizedBox(height: 5,),
+                        SizedBox(
+                          height: 5,
+                        ),
                         SizedBox(
                           height: 300,
                           child: GoogleMap(
@@ -583,7 +509,6 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                   items: _categories.map((String category) {
                     return DropdownMenuItem<String>(
                       value: category,
-
                       child: Text(category),
                     );
                   }).toList(),
@@ -601,53 +526,43 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                   },
                 ),
                 SizedBox(height: 20),
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      height: 45,
-                      child: MaterialButton(
-                        onPressed: _isLoading
-                            ? null
-                            : () async {
-                          if (_formKey.currentState!.validate()) {
-                            if (_selectedImage == null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text("Please select an image."),
-                                ),
-                              );
-                              return;
-                            }
-                            await _registerRestaurant();
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text("Please fill all fields."),
-                              ),
-                            );
-                          }
-                        },
-                        color: Colors.orange,
-                        shape: RoundedRectangleBorder(
+
+// Use the button style and loading indicator in your widget
+                Container(
+                  width: double.infinity,
+                  height: 55,
+                  child: ElevatedButton(
+                    onPressed: _isLoading
+                        ? null
+                        : () async {
+                      setState(() {
+                        _isLocationValid = _isLocationSelected;
+                        _isImageValid = _selectedImage != null;
+                      });
+                      if (_formKey.currentState!.validate() &&
+                          _isLocationValid &&
+                          _isImageValid) {
+                        await _registerRestaurant();
+                      }
+                    },
+                    style: buttonStyle.copyWith(
+                      shape: MaterialStateProperty.all(
+                        RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        child: Text(
-                          'Restaurant Register ',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
                         ),
                       ),
                     ),
-                    if (_isLoading)
-                      CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+                    child: _isLoading
+                        ? loadingIndicator
+                        : const Text(
+                      'Restaurant Register',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
-                  ],
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -658,7 +573,8 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
   }
 
   Future<void> _pickImageFromGallery() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    final pickedFile =
+    await ImagePicker().pickImage(source: ImageSource.gallery);
 
     setState(() {
       if (pickedFile != null) {
@@ -668,7 +584,8 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
   }
 
   Future<void> _pickImageFromCamera() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.camera);
+    final pickedFile =
+    await ImagePicker().pickImage(source: ImageSource.camera);
 
     setState(() {
       if (pickedFile != null) {
@@ -696,9 +613,12 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
 
       // Navigate to HomePage
       Future.delayed(Duration(seconds: 3), () {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomePage(),
+            ));
       });
-
     } catch (e) {
       // Handle registration error (e.g., show error message)
       ScaffoldMessenger.of(context).showSnackBar(

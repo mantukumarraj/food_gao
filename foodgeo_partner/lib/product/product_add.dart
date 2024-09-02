@@ -122,6 +122,7 @@ class _ProductAddState extends State<ProductAdd> {
         'image': downloadUrl.toString(),
         'restaurantId': widget.restaurantId,
         'partnerId': userId,
+
       };
 
       await FirebaseFirestore.instance.collection('products').doc(productId).set(productData);
@@ -322,7 +323,9 @@ class _ProductAddState extends State<ProductAdd> {
                 SizedBox(height: 20),
                 MaterialButton(
                   height: 45,
-                  onPressed: _isLoading ? null : () async {
+                  onPressed: _isLoading
+                      ? null
+                      : () async {
                     setState(() {
                       _imageError = _imageFile == null;
                     });
@@ -336,22 +339,37 @@ class _ProductAddState extends State<ProductAdd> {
                       });
                     }
                   },
-                  color: Colors.orange,
+                  color: Colors.orange, // Button ka color
+                  disabledColor: Colors.orange, // Disabled hone par bhi same color rahega
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.0),
                   ),
                   child: _isLoading
-                      ? CircularProgressIndicator(
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+                      ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                      SizedBox(width: 10), // Loader aur text ke beech mein space
+                      Text(
+                        'Loading...', // Optional loading text
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16.0,
+                        ),
+                      ),
+                    ],
                   )
-                      : Text(
-                    ' Product Add',
+                      : const Text(
+                    'Product Add',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 16.0,
                     ),
                   ),
                 ),
+
               ],
             ),
           ),

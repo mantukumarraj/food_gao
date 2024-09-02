@@ -111,7 +111,7 @@ class _ProductEditState extends State<ProductEdit> {
     final Map<String, dynamic> productData = {
       'name': name,
       'description': description,
-      'price': double.parse(price),
+      'price': int.parse(price),
       'items': int.parse(quantity),
       'image': imageUrl,
       'category': _selectedCategory,

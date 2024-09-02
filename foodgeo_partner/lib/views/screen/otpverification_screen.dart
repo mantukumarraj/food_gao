@@ -10,7 +10,8 @@ class OtpScreen extends StatefulWidget {
   final String phoneNumber;
   final String verificationId;
 
-  const OtpScreen({super.key, required this.phoneNumber, required this.verificationId});
+  const OtpScreen(
+      {super.key, required this.phoneNumber, required this.verificationId});
 
   @override
   _OtpScreenState createState() => _OtpScreenState();
@@ -22,6 +23,7 @@ class _OtpScreenState extends State<OtpScreen> {
   late Timer _timer;
   final TextEditingController _pinController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
+  bool _isLoading = false; // Add this variable to track loading state
 
   @override
   void initState() {
@@ -58,13 +60,18 @@ class _OtpScreenState extends State<OtpScreen> {
       return;
     }
 
+    setState(() {
+      _isLoading = true; // Start loading
+    });
+
     try {
       PhoneAuthCredential credential = PhoneAuthProvider.credential(
         verificationId: widget.verificationId,
         smsCode: otp,
       );
 
-      UserCredential userCredential = await _auth.signInWithCredential(credential);
+      UserCredential userCredential =
+          await _auth.signInWithCredential(credential);
       User? user = userCredential.user;
 
       if (user != null) {
@@ -73,7 +80,9 @@ class _OtpScreenState extends State<OtpScreen> {
         if (isFirstLogin) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => RegistrationPage(phoneNumber: widget.phoneNumber)),
+            MaterialPageRoute(
+                builder: (context) =>
+                    RegistrationPage(phoneNumber: widget.phoneNumber)),
           );
         } else {
           Navigator.pushReplacement(
@@ -87,6 +96,10 @@ class _OtpScreenState extends State<OtpScreen> {
         SnackBar(content: Text("Invalid OTP. Please try again.")),
       );
       print('Error verifying OTP: $e');
+    } finally {
+      setState(() {
+        _isLoading = false; // Stop loading
+      });
     }
   }
 
@@ -107,6 +120,7 @@ class _OtpScreenState extends State<OtpScreen> {
       return true;
     }
   }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -229,7 +243,7 @@ class _OtpScreenState extends State<OtpScreen> {
                       child: ElevatedButton(
                         onPressed: () {
                           _verifyOTP();
-                        },
+                        }, // Disable button when loading
                         style: ElevatedButton.styleFrom(
                           padding: EdgeInsets.all(15),
                           backgroundColor: Colors.orange,
@@ -237,13 +251,17 @@ class _OtpScreenState extends State<OtpScreen> {
                             borderRadius: BorderRadius.circular(10),
                           ),
                         ),
-                        child: Text(
-                          "Submit",
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.white,
-                          ),
-                        ),
+                        child: _isLoading // Show loader if loading
+                            ? CircularProgressIndicator(
+                                color: Colors.white,
+                              )
+                            : Text(
+                                "Submit",
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white,
+                                ),
+                              ),
                       ),
                     ),
                   ],

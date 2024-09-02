@@ -86,6 +86,7 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -118,7 +119,7 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                   SizedBox(height: 20),
                   ElevatedButton(
                     onPressed: () {
-                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => RestaurantRegistrationPage(),));// Replace with your registration page route
+                      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => RestaurantRegistrationPage(),)); // Replace with your registration page route
                     },
                     child: Text('Register Your Restaurant'),
                   ),
@@ -179,7 +180,7 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                                 child: Container(
                                   padding: EdgeInsets.all(1),
                                   decoration: BoxDecoration(
-                                    color: Colors.blueGrey,
+                                    color: Colors.orange,
                                     shape: BoxShape.circle,
                                   ),
                                   child: PopupMenuButton<String>(
@@ -262,7 +263,7 @@ class _RestaurantListScreenState extends State<RestaurantListScreen> {
                                       borderRadius: BorderRadius.circular(8.0),
                                     ),
                                     child: Text(
-                                      ' Product Add',
+                                      'Product Add',
                                       style: TextStyle(
                                         color: Colors.white,
                                         fontSize: 16,
