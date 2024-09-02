@@ -86,7 +86,7 @@ class _ProductAddState extends State<ProductAdd> {
     }
 
     setState(() {
-      _isLoading = true; // Start loading
+      _isLoading = true;
     });
 
     try {
@@ -127,7 +127,7 @@ class _ProductAddState extends State<ProductAdd> {
       ScaffoldMessenger.of(context)
           .showSnackBar(SnackBar(content: Text('Product uploaded successfully')));
 
-      await Future.delayed(Duration(seconds: 2)); // Delay for 2 seconds to show the message
+      await Future.delayed(Duration(seconds: 2));
 
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (context) => HomePage()));
@@ -141,6 +141,7 @@ class _ProductAddState extends State<ProductAdd> {
     }
   }
 
+  @override
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -209,6 +210,7 @@ class _ProductAddState extends State<ProductAdd> {
                         ? DecorationImage(
                       image: FileImage(File(_imageFile!.path)),
                       fit: BoxFit.cover,
+
                     )
                         : null,
                   ),
@@ -223,6 +225,7 @@ class _ProductAddState extends State<ProductAdd> {
                 decoration: InputDecoration(
                   labelText: 'Name',
                   border: OutlineInputBorder(),
+
                 ),
               ),
               SizedBox(height: 20),
@@ -270,44 +273,44 @@ class _ProductAddState extends State<ProductAdd> {
                   labelText: 'Category',
                   border: OutlineInputBorder(),
                 ),
-                isExpanded: true, // Make dropdown expand to fill available space
-                icon: Icon(Icons.arrow_drop_down, color: Colors.orange), // Customize dropdown icon
+                isExpanded: true,
+                icon: Icon(Icons.arrow_drop_down, color: Colors.orange),
               ),
               SizedBox(height: 20),
-              Stack(
-                alignment: Alignment.center,
-                children: [
-                  Container(
-                    width: double.infinity,
-                    height: 45,
-                    child: MaterialButton(
-                      onPressed: _isLoading ? null : () async {
-                        await _uploadImage();
-                      },
-                      color: Colors.orange,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8.0),
-                      ),
-                      child: Text(
-                        'Add Product',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
+              MaterialButton(
+                height: 45,
+                onPressed: _isLoading ? null : () async {
+                  setState(() {
+                    _isLoading = true;
+                  });
+                  await _uploadImage();
+                  setState(() {
+                    _isLoading = false;
+                  });
+                },
+                color: Colors.orange,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8.0),
+                ),
+                child: _isLoading
+                    ? CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
+                )
+                    : Text(
+                  'Add Product',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
-                  if (_isLoading)
-                    CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
-                    ),
-                ],
+                ),
               ),
+
             ],
           ),
         ),
       ),
     );
   }
+
 }

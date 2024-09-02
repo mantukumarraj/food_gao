@@ -98,16 +98,15 @@ class _OtpScreenState extends State<OtpScreen> {
           .get();
 
       if (userDoc.exists) {
-        return false; // User is registered
+        return false;
       } else {
-        return true; // User is not registered
+        return true;
       }
     } catch (e) {
       print('Error checking registration status: $e');
-      return true; // Assume the user is not registered if there's an error
+      return true;
     }
   }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -116,7 +115,6 @@ class _OtpScreenState extends State<OtpScreen> {
         height: MediaQuery.of(context).size.height,
         child: Stack(
           children: [
-            // Yellow container
             Container(
               width: double.infinity,
               height: 400,
@@ -157,7 +155,6 @@ class _OtpScreenState extends State<OtpScreen> {
                 ],
               ),
             ),
-            // White container overlapping the yellow container
             Positioned(
               top: 330,
               left: 0,

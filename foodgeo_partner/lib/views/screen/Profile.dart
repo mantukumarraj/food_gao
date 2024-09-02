@@ -6,8 +6,6 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
-import 'RestaurantListScreen.dart';
-
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
 
@@ -57,7 +55,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             decoration: const BoxDecoration(
               color: Color(0xFFFFA726),
               borderRadius: BorderRadius.only(
-                bottomLeft: Radius.circular(100),
+                bottomLeft: Radius.circular(80),
               ),
             ),
             child: Column(
@@ -94,7 +92,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileUpdateScreen(),));
                 }),
                 _buildMenuItem(Icons.restaurant_menu, 'Register Your Restaurant', () {
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => RestaurantListScreen()));
+                  Navigator.push(context, MaterialPageRoute(builder: (context) => RestaurantRegistrationPage(),));
                 }),
 
                 // Notification item with switch

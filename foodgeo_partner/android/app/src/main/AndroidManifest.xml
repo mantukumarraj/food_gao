@@ -7,7 +7,6 @@
     <uses-feature android:name="android.hardware.location.gps" />
     <uses-feature android:name="android.hardware.location.network" />
 
-
     <application
         android:label="foodgeo_partner"
         android:name="${applicationName}"
@@ -38,6 +37,7 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
         <meta-data android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyCiJLymeCL0CTqTmcmPJ5T0lkLwA02OxWg"/>
     </application>

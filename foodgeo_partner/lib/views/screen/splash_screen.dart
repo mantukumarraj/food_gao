@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:foodgeo_partner/views/screen/home_page.dart';
 import 'package:foodgeo_partner/views/screen/phone_verification_screen.dart';
-
-import 'home_screen.dart';
+import 'package:foodgeo_partner/views/screen/register_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   @override
@@ -14,16 +15,29 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-
-    Timer(Duration(seconds: 3), () {
+    Timer(Duration(seconds: 3), () async {
       User? user = FirebaseAuth.instance.currentUser;
       if (user != null) {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) =>  HomePage()),
-        );
-      } else {
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(user.uid)
+            .get();
 
+        if (userDoc.exists) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => HomePage()),
+          );
+        } else {
+          String? phoneNumber = user.phoneNumber ?? '';
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RegistrationPage(phoneNumber: phoneNumber),
+            ),
+          );
+        }
+      } else {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => PhoneAuthView()),
@@ -37,7 +51,7 @@ class _SplashScreenState extends State<SplashScreen> {
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
-          color: Colors.orange, // Background color
+          color: Colors.orange,
         ),
         child: Center(
           child: Column(

@@ -13,7 +13,7 @@ class RegistrationController {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
 
-  Future<User?> registerUser(String gender, File image, String phoneNumber) async {
+  Future<User?> registerUser(String gender, File image) async {
     String name = nameController.text.trim();
     String address = addressController.text.trim();
     String email = emailController.text.trim();
@@ -51,7 +51,7 @@ class RegistrationController {
 
   Future<String> _uploadImage(String uid, File image) async {
     try {
-      Reference storageRef = _storage.ref().child('partner/$uid');
+      Reference storageRef = _storage.ref().child('partner_images/$uid');
       UploadTask uploadTask = storageRef.putFile(image);
       TaskSnapshot taskSnapshot = await uploadTask;
       return await taskSnapshot.ref.getDownloadURL();
@@ -65,5 +65,5 @@ class RegistrationController {
     addressController.dispose();
     emailController.dispose();
     passwordController.dispose();
-   }
+  }
 }
