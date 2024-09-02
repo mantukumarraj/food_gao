@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:foodgeo_partner/product/productDetail_screen.dart';
 import 'edit_product_screen.dart';
 
 class ProductListScreen extends StatelessWidget {
@@ -132,7 +131,7 @@ class ProductListScreen extends StatelessWidget {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (context) => ProductDetailScreen(product: product),
+                                    builder: (context) => ProductListScreen( restaurantId: '',),
                                   ),
                                 );
                               },
