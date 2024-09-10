@@ -29,6 +29,10 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
   final _formKey = GlobalKey<FormState>();
   bool _isDropdownExpanded = false;
   bool _isSearching = false;
+  bool _isLocationSelected = false;
+  String _selectedAddress = '';
+  bool _isLocationValid = true;
+  bool _isImageValid = true;
 
   static const CameraPosition _kGooglePlex = CameraPosition(
     target: LatLng(25.971588, 84.924759),
@@ -93,133 +97,6 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
     }
   }
 
-  // Future<void> _searchLocation(String query) async {
-  //   setState(() {
-  //     _isSearching = true;
-  //   });
-  //
-  //   final GoogleMapController controller = await _mapcontroller.future;
-  //   try {
-  //     // Use geocoding package to get the location from address
-  //     List<geo.Location> locations = await geo.locationFromAddress(query);
-  //
-  //     if (locations.isNotEmpty) {
-  //       final LatLng cityLocation = LatLng(locations.first.latitude, locations.first.longitude);
-  //
-  //       // Get the latitude and longitude of the searched location
-  //       double latitude = locations.first.latitude;  // Latitude
-  //       double longitude = locations.first.longitude;  // Longitude
-  //       _controller.locationlongitudeController.text = longitude as String;
-  //
-  //       // Fetch the address from the coordinates using reverse geocoding
-  //       List<geo.Placemark> placemarks = await geo.placemarkFromCoordinates(latitude, longitude);
-  //
-  //       String address = "";
-  //       if (placemarks.isNotEmpty) {
-  //         geo.Placemark place = placemarks.first;
-  //         address = "${place.name}, ${place.locality}, ${place.administrativeArea}, ${place.country}";
-  //         print('Searched Location Address: $address');
-  //         _controller.locationController.text =address;
-  //
-  //         // Store the address in locationController
-  //         // <-- Store the address here
-  //       }
-  //
-  //       // Move the camera to the searched location
-  //       await controller.animateCamera(CameraUpdate.newLatLngZoom(cityLocation, 12.0));
-  //
-  //       _markers.add(
-  //         Marker(
-  //           markerId: MarkerId('cityLocation'),
-  //           position: cityLocation,
-  //           infoWindow: InfoWindow(
-  //             title: query,
-  //             snippet: address, // Show address in snippet
-  //           ),
-  //         ),
-  //       );
-  //
-  //       // Calculate distance if current location is available
-  //       if (_currentLocation != null) {
-  //         double distanceInKm = Geolocator.distanceBetween(
-  //           _currentLocation!.latitude!,
-  //           _currentLocation!.longitude!,
-  //           cityLocation.latitude,
-  //           cityLocation.longitude,
-  //         ) / 1000;
-  //
-  //         ScaffoldMessenger.of(context).showSnackBar(
-  //           SnackBar(content: Text('Distance: ${distanceInKm.toStringAsFixed(2)} km')),
-  //         );
-  //       }
-  //       setState(() {});
-  //     } else {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(content: Text('Location not found')),
-  //       );
-  //     }
-  //   } catch (e) {
-  //     print('Error searching location: $e');
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text('Error: Unable to find the location')),
-  //     );
-  //   } finally {
-  //     setState(() {
-  //       _isSearching = false;
-  //     });
-  //   }
-  // }
-  // Future<void> _searchLocation(String query) async {
-  //   setState(() {
-  //     _isSearching = true;
-  //   });
-  //
-  //   final GoogleMapController controller = await _mapcontroller.future;
-  //   try {
-  //     List<geo.Location> locations = await geo.locationFromAddress(query);
-  //     if (locations.isNotEmpty) {
-  //       final LatLng cityLocation = LatLng(locations.first.latitude, locations.first.longitude);
-  //       await controller.animateCamera(CameraUpdate.newLatLngZoom(cityLocation, 12.0));
-  //
-  //       _markers.add(
-  //         Marker(
-  //           markerId: MarkerId('cityLocation'),
-  //           position: cityLocation,
-  //           infoWindow: InfoWindow(
-  //             title: query,
-  //           ),
-  //         ),
-  //       );
-  //
-  //       if (_currentLocation != null) {
-  //         double distanceInKm = Geolocator.distanceBetween(
-  //           _currentLocation!.latitude!,
-  //           _currentLocation!.longitude!,
-  //           cityLocation.latitude,
-  //           cityLocation.longitude,
-  //         ) / 1000;
-  //
-  //         ScaffoldMessenger.of(context).showSnackBar(
-  //           SnackBar(content: Text('Distance: ${distanceInKm.toStringAsFixed(2)} km')),
-  //         );
-  //       }
-  //       setState(() {});
-  //     } else {
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         SnackBar(content: Text('Location not found')),
-  //       );
-  //     }
-  //   } catch (e) {
-  //     print('Error searching location: $e');
-  //     ScaffoldMessenger.of(context).showSnackBar(
-  //       SnackBar(content: Text('Error: Unable to find the location')),
-  //     );
-  //   } finally {
-  //     setState(() {
-  //       _isSearching = false;
-  //     });
-  //   }
-  // }
 
   Future<void> _searchLocation(String query) async {
     setState(() {
@@ -233,10 +110,7 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
         final LatLng cityLocation = LatLng(locations.first.latitude, locations.first.longitude);
         await controller.animateCamera(CameraUpdate.newLatLngZoom(cityLocation, 12.0));
 
-        // Store the longitude in locationLongitudeController
         _controller.locationlongitudeController.text = cityLocation.longitude.toString();
-
-        // Reverse geocoding to get the address before marker click
         List<geo.Placemark> placemarks = await geo.placemarkFromCoordinates(
           cityLocation.latitude,
           cityLocation.longitude,
@@ -246,9 +120,11 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
         if (placemarks.isNotEmpty) {
           geo.Placemark place = placemarks.first;
           address = "${place.name}, ${place.locality},${place.administrativeArea}, ${place.country}";
-
-          // Store the address in locationController
           _controller.locationController.text = address;
+          setState(() {
+            _isLocationSelected = true;
+            _selectedAddress = address;
+          });
         }
 
         _markers.add(
@@ -259,7 +135,6 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
               title: query,
             ),
             onTap: () async {
-              // Show a SnackBar with the address when marker is tapped
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text('Address: $address')),
               );
@@ -309,6 +184,7 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.white,
       appBar:AppBar(
         flexibleSpace: Container(
           decoration: BoxDecoration(
@@ -334,7 +210,7 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
         ),
       ),
 
-        body: SingleChildScrollView(
+      body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
           child: Form(
@@ -377,6 +253,10 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                     height: 200,
                     decoration: BoxDecoration(
                       color: Colors.grey[200],
+                      border: Border.all(
+                        color: _isImageValid ? Colors.grey : Colors.red,
+                        width: 1.0,
+                      ),
                       borderRadius: BorderRadius.circular(10.0),
                       image: _selectedImage != null
                           ? DecorationImage(
@@ -390,6 +270,14 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                         : null,
                   ),
                 ),
+                if (!_isImageValid)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 4.0),
+                    child: Text(
+                      'Please select a restaurant image',
+                      style: TextStyle(color: Colors.red, fontSize: 12),
+                    ),
+                  ),
                 SizedBox(height: 20),
                 CustomTextField(
                   labelText: 'Restaurant Name',
@@ -446,78 +334,86 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                   },
                 ),
                 SizedBox(height: 20),
+
+                DropdownButtonFormField<String>(
+                  value: _selectedGender,
+                  items: ['Male', 'Female'].map((gender) {
+                    return DropdownMenuItem(
+                      value: gender,
+                      child: Text(gender),
+                    );
+                  }).toList(),
+                  onChanged: (value) {
+                    setState(() {
+                      _selectedGender = value;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    labelText: 'Gender',
+                    prefixIcon: Icon(Icons.people_alt_rounded),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please select a gender';
+                    }
+                    return null;
+                  },
+                ),
+
+                SizedBox(height: 20),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      "Gender",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                    GestureDetector(
+                      onTap: () {
+                        setState(() {
+                          _isDropdownExpanded = !_isDropdownExpanded;
+                        });
+                      },
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: _isLocationValid ? Colors.grey : Colors.red,
+                            width: 1.0,
+                          ),
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                        padding: EdgeInsets.all(8.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                _isLocationSelected
+                                    ? _selectedAddress
+                                    : 'Select outlet’s location on the map',
+                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Icon(
+                              _isDropdownExpanded ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ListTile(
-                            title: const Text('Male'),
-                            leading: Radio<String>(
-                              value: 'Male',
-                              groupValue: _selectedGender,
-
-                              onChanged: (String? value) {
-                                setState(() {
-                                  _selectedGender = value;
-                                });
-                              },
-                            ),
-                          ),
+                    if (!_isLocationValid)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4.0),
+                        child: Text(
+                          'Please select a location',
+                          style: TextStyle(color: Colors.red, fontSize: 12),
                         ),
-                        Expanded(
-                          child: ListTile(
-                            title: const Text('Female'),
-                            leading: Radio<String>(
-                              value: 'Female',
-                              groupValue: _selectedGender,
-                              onChanged: (String? value) {
-                                setState(() {
-                                  _selectedGender = value;
-                                });
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                      ),
                   ],
                 ),
-                SizedBox(height: 20),
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _isDropdownExpanded = !_isDropdownExpanded;
-                    });
-                  },
-                  child: Container(
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.orange, width: 2.0),
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                    padding: EdgeInsets.all(8.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Select outlet’s location on the map',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                        ),
-                        Icon(
-                          _isDropdownExpanded ? Icons.arrow_drop_up : Icons.arrow_drop_down,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+
+
                 SizedBox(height: 7,),
                 AnimatedContainer(
                   duration: Duration(milliseconds: 300),
@@ -539,11 +435,11 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                                 },
                               ),
                               border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(8.0), // Rounded corners
+                                borderRadius: BorderRadius.circular(8.0),
                                 borderSide: BorderSide.none,
                               ),
                               filled: true,
-                              fillColor: Colors.grey.shade200, // Light grey background color
+                              fillColor: Colors.grey.shade200,
                               contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
                             ),
                             onSubmitted: (query) {
@@ -601,54 +497,42 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                   },
                 ),
                 SizedBox(height: 20),
-                Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Container(
-                      width: double.infinity,
-                      height: 45,
-                      child: MaterialButton(
-                        onPressed: _isLoading
-                            ? null
-                            : () async {
-                          if (_formKey.currentState!.validate()) {
-                            if (_selectedImage == null) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text("Please select an image."),
-                                ),
-                              );
-                              return;
-                            }
-                            await _registerRestaurant();
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text("Please fill all fields."),
-                              ),
-                            );
-                          }
-                        },
-                        color: Colors.orange,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8.0),
-                        ),
-                        child: Text(
-                          'Restaurant Register ',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+
+                Container(
+                  width: double.infinity,
+                  height: 45,
+                  child: MaterialButton(
+                    onPressed: _isLoading
+                        ? null
+                        : () async {
+                      setState(() {
+                        _isLocationValid = _isLocationSelected;
+                        _isImageValid = _selectedImage != null;
+                      });
+                      if (_formKey.currentState!.validate() && _isLocationValid && _isImageValid) {
+                        await _registerRestaurant();
+                      }
+                    },
+                    color: Colors.orange,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                    child: _isLoading
+                        ? CircularProgressIndicator(
+                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                    )
+                        : Text(
+                      'Restaurant Register',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
-                    if (_isLoading)
-                      CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
-                      ),
-                  ],
+                  ),
                 ),
+
+
               ],
             ),
           ),

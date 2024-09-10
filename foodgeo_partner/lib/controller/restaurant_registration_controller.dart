@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 class RegisterControllers {
   final TextEditingController nameController = TextEditingController();
@@ -36,13 +37,17 @@ class RegisterControllers {
         'imageUrl': imageUrl,
         'restaurantId': restaurantId,
         'verification': false,
-        'userId': user.uid,
+        'partnerId': user.uid,
       };
 
       await FirebaseFirestore.instance
           .collection('restaurants')
           .doc(restaurantId)
           .set(userData);
+
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      await prefs.setString('restaurantId', restaurantId);
+
     } catch (e) {
       throw Exception("Failed to register restaurant: ${e.toString()}");
     }
@@ -72,7 +77,7 @@ class RegisterControllers {
 
     final querySnapshot = await FirebaseFirestore.instance
         .collection('restaurants')
-        .where('userId', isEqualTo: user.uid)
+        .where('partnerId', isEqualTo: user.uid)
         .get();
 
     final restaurants = querySnapshot.docs.map((doc) => {

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'delivery_boyslist_screen.dart';
 
 class OrdersScreen extends StatefulWidget {
   @override
@@ -10,7 +12,6 @@ class _OrdersScreenState extends State<OrdersScreen> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   List<DocumentSnapshot> _orders = [];
   List<DocumentSnapshot> _filteredOrders = [];
-  String _searchQuery = '';
 
   @override
   void initState() {
@@ -19,32 +20,28 @@ class _OrdersScreenState extends State<OrdersScreen> {
   }
 
   Future<void> _fetchOrders() async {
-    final querySnapshot = await _firestore.collection('orders').get();
-    setState(() {
-      _orders = querySnapshot.docs;
-      _filteredOrders = _orders;
-    });
+    try {
+      SharedPreferences prefs = await SharedPreferences.getInstance();
+      String? restaurantId = prefs.getString('restaurantId');
+
+      if (restaurantId == null) {
+        print('No restaurantId found in SharedPreferences.');
+        return;
+      }
+
+      final querySnapshot = await _firestore
+          .collection('orders')
+          .where('restaurantId', isEqualTo: restaurantId)
+          .get();
+
+      setState(() {
+        _orders = querySnapshot.docs;
+        _filteredOrders = _orders;
+      });
+    } catch (e) {
+      print('Error fetching orders: $e');
+    }
   }
-
-  void _filterOrders(String query) {
-    final filteredOrders = _orders.where((order) {
-      final name = order['name'].toLowerCase();
-      final description = order['description'].toLowerCase();
-      final searchLower = query.toLowerCase();
-      return name.contains(searchLower) || description.contains(searchLower);
-    }).toList();
-
-    setState(() {
-      _searchQuery = query;
-      _filteredOrders = filteredOrders;
-    });
-  }
-
-  void _handleAction(String action, DocumentSnapshot order) {
-    print('$action clicked for order: ${order.id}');
-    // Add logic to update Firestore based on the action
-  }
-
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
@@ -53,21 +50,11 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.orange,
         title: Text('Orders'),
       ),
       body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              decoration: InputDecoration(
-                labelText: 'Search',
-                border: OutlineInputBorder(),
-                prefixIcon: Icon(Icons.search),
-              ),
-              onChanged: _filterOrders,
-            ),
-          ),
           Expanded(
             child: ListView.builder(
               itemCount: _filteredOrders.length,
@@ -88,11 +75,13 @@ class _OrdersScreenState extends State<OrdersScreen> {
                               backgroundImage: NetworkImage(order['image']),
                               radius: screenWidth * 0.15,
                             ),
-                            SizedBox(width: padding),
+                            SizedBox(width:30 ,),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
+
+
                                   Text(
                                     order['name'],
                                     style: TextStyle(
@@ -109,40 +98,28 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                   ),
                                   SizedBox(height: padding / 2),
                                   Text(
-                                    '₹${order['price']}',
+                                    '${order['price']}',
                                     style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       color: Colors.orange,
                                       fontSize: fontSize,
                                     ),
                                   ),
-                                  SizedBox(height: padding / 2),
-                                  Text(
-                                    'Status: ${order['status']}',
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: fontSize * 0.9,
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (context) => DeliveryBoysScreen()),
+                                      );
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.orange, // Background color
+                                      padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                                      textStyle: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold),
                                     ),
+                                    child: Text('Ready to delivery', style: TextStyle(color: Colors.white),), // Button label
                                   ),
                                 ],
-                              ),
-                            ),
-                          ],
-                        ),
-                        SizedBox(height: padding),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: TextButton(
-                                onPressed: () => _handleAction('Accept', _filteredOrders[index]),
-                                child: Text('Accept'),
-                              ),
-                            ),
-                            SizedBox(width: padding / 2),
-                            Expanded(
-                              child: TextButton(
-                                onPressed: () => _handleAction('Cancel', _filteredOrders[index]),
-                                child: Text('Cancel'),
                               ),
                             ),
                           ],

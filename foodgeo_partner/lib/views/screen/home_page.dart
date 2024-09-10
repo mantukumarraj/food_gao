@@ -51,6 +51,7 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       print('Error fetching restaurants: $e');
     }
+
   }
 
   Future<void> _fetchProducts() async {
@@ -109,6 +110,7 @@ class _HomePageState extends State<HomePage> {
     setState(() {
       _showAllProducts = !_showAllProducts;
     });
+
   }
 
   @override
@@ -191,6 +193,7 @@ class _HomePageState extends State<HomePage> {
           if (_restaurants.isNotEmpty) ...[
             SizedBox(height: 10.0),
             CarouselSlider(
+
               options: CarouselOptions(
                 height: 200.0,
                 autoPlay: true,
@@ -333,6 +336,7 @@ class _HomePageState extends State<HomePage> {
                     );
                   },
                   child: Card(
+
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0),
                     ),
