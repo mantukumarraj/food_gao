@@ -1,17 +1,14 @@
 import 'dart:io';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-
 import 'home_page.dart';
 
-
 class RegistrationPage extends StatefulWidget {
-
-
-  const RegistrationPage({Key? key, }) : super(key: key);
+  const RegistrationPage({Key? key}) : super(key: key);
 
   @override
   State<RegistrationPage> createState() => _RegistrationPageState();
@@ -23,6 +20,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final TextEditingController _addressController = TextEditingController();
   String? _selectedGender;
   File? _imageFile;
+  String? _tokenId; // Store the token here
 
   final ImagePicker _picker = ImagePicker();
 
@@ -94,7 +92,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
     }
   }
 
-  void _submitDetails() async {
+  Future<void> _submitDetails() async {
     String name = _nameController.text.trim();
     String age = _ageController.text.trim();
     String address = _addressController.text.trim();
@@ -113,7 +111,9 @@ class _RegistrationPageState extends State<RegistrationPage> {
         throw Exception("User not logged in");
       }
 
-
+      // Get Firebase Messaging token
+      _tokenId = await FirebaseMessaging.instance.getToken();
+      print('FCM Token: $_tokenId'); // Printing the token
 
       String imageUrl = '';
       if (_imageFile != null) {
@@ -125,9 +125,10 @@ class _RegistrationPageState extends State<RegistrationPage> {
         'name': name,
         'phone': user.phoneNumber,
         'gender': gender,
-        'age':age,
+        'age': age,
         'address': address,
         'imageUrl': imageUrl,
+        'tokenId': _tokenId // Save the FCM token
       });
 
       Navigator.pushReplacement(
@@ -226,12 +227,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   const SizedBox(height: 30),
                   TextFormField(
                     controller: _nameController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your name';
-                      }
-                      return null;
-                    },
                     decoration: InputDecoration(
                       labelText: "Name",
                       border: OutlineInputBorder(
@@ -252,12 +247,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   const SizedBox(height: 20),
                   TextFormField(
                     controller: _ageController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your age';
-                      }
-                      return null;
-                    },
                     decoration: InputDecoration(
                       labelText: "Age",
                       border: OutlineInputBorder(
@@ -279,12 +268,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   const SizedBox(height: 20),
                   DropdownButtonFormField<String>(
                     value: _selectedGender,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please selecte your gender ';
-                      }
-                      return null;
-                    },
                     items: ['Male', 'Female', 'Other']
                         .map((label) => DropdownMenuItem(
                       value: label,
@@ -317,12 +300,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
                   const SizedBox(height: 20),
                   TextFormField(
                     controller: _addressController,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Please enter your address';
-                      }
-                      return null;
-                    },
                     decoration: InputDecoration(
                       labelText: "Address",
                       border: OutlineInputBorder(
@@ -341,22 +318,23 @@ class _RegistrationPageState extends State<RegistrationPage> {
                     ),
                   ),
                   const SizedBox(height: 30),
-                  ElevatedButton(
-                    onPressed: _submitDetails,
-                    child: Text(
-                      'Register',
-                      style: TextStyle(
-                        color: Colors.white,
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _submitDetails,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        padding: const EdgeInsets.symmetric(vertical: 15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Submit',
+                        style: TextStyle(fontSize: 16),
                       ),
                     ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orange,
-                      minimumSize: Size(double.infinity, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                  )
+                  ),
                 ],
               ),
             ),

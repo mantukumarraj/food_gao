@@ -37,7 +37,7 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
       }
 
       var userData = await FirebaseFirestore.instance
-          .collection('users')
+          .collection('partners')
           .doc(user.uid)
           .get();
       if (userData.exists) {
@@ -160,7 +160,7 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
       }
 
       await FirebaseFirestore.instance
-          .collection('users')
+          .collection('partners')
           .doc(user.uid)
           .update({
         'name': name,

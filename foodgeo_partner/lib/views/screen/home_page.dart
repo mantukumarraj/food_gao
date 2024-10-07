@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import '../../product/productDetail_screen.dart';
-import 'Profile.dart';
+import 'Profile_page.dart';
 import 'order_screen.dart';
 
 class HomePage extends StatefulWidget {
@@ -22,7 +22,9 @@ class _HomePageState extends State<HomePage> {
   List<Map<String, dynamic>> _filteredProducts = [];
   String _searchText = '';
   int _selectedIndex = 0;
-  bool _showAllProducts = false; // Add this flag
+  bool _showAllProducts = false;
+
+
 
   @override
   void initState() {
@@ -38,7 +40,7 @@ class _HomePageState extends State<HomePage> {
 
       QuerySnapshot restaurantDocs = await FirebaseFirestore.instance
           .collection('restaurants')
-          .where('userId', isEqualTo: currentUserId)
+          .where('partnerId', isEqualTo: currentUserId)
           .get();
 
       List<Map<String, dynamic>> restaurants = restaurantDocs.docs
@@ -51,7 +53,6 @@ class _HomePageState extends State<HomePage> {
     } catch (e) {
       print('Error fetching restaurants: $e');
     }
-
   }
 
   Future<void> _fetchProducts() async {
@@ -60,7 +61,7 @@ class _HomePageState extends State<HomePage> {
 
       QuerySnapshot productDocs = await FirebaseFirestore.instance
           .collection('products')
-          .where('userId', isEqualTo: currentUserId)
+          .where('partnerId', isEqualTo: currentUserId)
           .get();
 
       List<Map<String, dynamic>> products = productDocs.docs
@@ -105,14 +106,11 @@ class _HomePageState extends State<HomePage> {
       _fetchProducts();
     });
   }
-
   void _toggleShowAllProducts() {
     setState(() {
       _showAllProducts = !_showAllProducts;
     });
-
   }
-
   @override
   Widget build(BuildContext context) {
     final List<Widget> _pages = [
@@ -124,40 +122,42 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: _selectedIndex == 0
           ? AppBar(
-              title: Container(
-                padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 0.0),
-                margin: EdgeInsets.all(5.0),
-                decoration: BoxDecoration(
-                  color: Colors.grey[200],
-                  borderRadius: BorderRadius.circular(30.0),
-                ),
-                child: Row(
-                  children: [
-                    Icon(Icons.search, color: Colors.black),
-                    const SizedBox(
-                      width: 20,
-                    ),
-                    Expanded(
-                      child: TextField(
-                        onChanged: (value) {
-                          setState(() {
-                            _searchText = value;
-                            _filterProducts();
-                          });
-                        },
-                        decoration: InputDecoration(
-                          hintText: 'Search...',
-                          border: InputBorder.none,
-                        ),
-                      ),
-                    ),
-                  ],
+        automaticallyImplyLeading: false,
+        title: Container(
+          padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 0.0),
+          margin: EdgeInsets.all(5.0),
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.circular(30.0),
+          ),
+          child: Row(
+            children: [
+              Icon(Icons.search, color: Colors.black),
+              const SizedBox(
+                width: 20,
+              ),
+              Expanded(
+                child: TextField(
+                  onChanged: (value) {
+                    setState(() {
+                      _searchText = value;
+                      _filterProducts();
+                    });
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Search...',
+                    border: InputBorder.none,
+                  ),
                 ),
               ),
-            )
+            ],
+          ),
+        ),
+      )
           : null,
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.white,
         type: BottomNavigationBarType.fixed,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
@@ -193,7 +193,6 @@ class _HomePageState extends State<HomePage> {
           if (_restaurants.isNotEmpty) ...[
             SizedBox(height: 10.0),
             CarouselSlider(
-
               options: CarouselOptions(
                 height: 200.0,
                 autoPlay: true,
@@ -268,7 +267,7 @@ class _HomePageState extends State<HomePage> {
                         borderRadius: BorderRadius.circular(10.0),
                         image: DecorationImage(
                           image:
-                              AssetImage('assets/Images/resturant image.jpeg'),
+                          AssetImage('assets/Images/resturant image.jpeg'),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -320,8 +319,8 @@ class _HomePageState extends State<HomePage> {
               itemCount: _showAllProducts
                   ? _filteredProducts.length
                   : (_filteredProducts.length > 4
-                      ? 4
-                      : _filteredProducts.length),
+                  ? 4
+                  : _filteredProducts.length),
               itemBuilder: (context, index) {
                 final product = _filteredProducts[index];
 
@@ -336,14 +335,13 @@ class _HomePageState extends State<HomePage> {
                     );
                   },
                   child: Card(
-
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10.0),
                     ),
                     elevation: 4,
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Padding(
                           padding: const EdgeInsets.all(8.0),
@@ -412,7 +410,7 @@ class _HomePageState extends State<HomePage> {
                     child: Text(
                       'Recommended for you',
                       style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                   ),
                   Spacer(),

@@ -20,10 +20,12 @@ class ProductAdd extends StatefulWidget {
 class _ProductAddState extends State<ProductAdd> {
   final FirebaseStorage _storage = FirebaseStorage.instance;
   File? _imageFile;
+  final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameController;
   late TextEditingController _descriptionController;
   late TextEditingController _priceController;
   late TextEditingController _itemsController;
+  bool _imageError = false;
 
   final List<String> _categories = [
     'Appetizer',
@@ -34,7 +36,6 @@ class _ProductAddState extends State<ProductAdd> {
 
   String? _selectedCategory;
   bool _isLoading = false;
-
 
   @override
   void initState() {
@@ -60,6 +61,7 @@ class _ProductAddState extends State<ProductAdd> {
     setState(() {
       if (pickedFile != null) {
         _imageFile = File(pickedFile.path);
+        _imageError = false;
       }
     });
   }
@@ -70,19 +72,19 @@ class _ProductAddState extends State<ProductAdd> {
     setState(() {
       if (pickedFile != null) {
         _imageFile = File(pickedFile.path);
+        _imageError = false;
       }
     });
   }
 
   Future<void> _uploadImage() async {
-    if (_imageFile == null ||
-        _nameController.text.isEmpty ||
-        _descriptionController.text.isEmpty ||
-        _priceController.text.isEmpty ||
-        _itemsController.text.isEmpty ||
-        _selectedCategory == null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Please fill all fields')));
+    if (_imageFile == null || !_formKey.currentState!.validate() || _selectedCategory == null) {
+      if (_imageFile == null) {
+        setState(() {
+          _imageError = true;
+        });
+      }
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Please fill all fields')));
       return;
     }
 
@@ -120,7 +122,8 @@ class _ProductAddState extends State<ProductAdd> {
         'category': _selectedCategory,
         'image': downloadUrl.toString(),
         'restaurantId': widget.restaurantId,
-        'userId': userId,
+        'partnerId': userId,
+
       };
 
       await FirebaseFirestore.instance.collection('products').doc(productId).set(productData);
@@ -142,7 +145,6 @@ class _ProductAddState extends State<ProductAdd> {
     }
   }
 
-  @override
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -168,150 +170,212 @@ class _ProductAddState extends State<ProductAdd> {
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              GestureDetector(
-                onTap: () {
-                  showModalBottomSheet(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return SafeArea(
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: <Widget>[
-                            ListTile(
-                              leading: Icon(Icons.photo_library),
-                              title: Text('Choose from gallery'),
-                              onTap: () {
-                                Navigator.pop(context);
-                                _pickImageFromGallery();
-                              },
-                            ),
-                            ListTile(
-                              leading: Icon(Icons.photo_camera),
-                              title: Text('Take a picture'),
-                              onTap: () {
-                                Navigator.pop(context);
-                                _pickImageFromCamera();
-                              },
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  );
-                },
-                child: Container(
-                  height: 200,
-                  decoration: BoxDecoration(
-                    color: Colors.grey[200],
-                    borderRadius: BorderRadius.circular(10.0),
-                    image: _imageFile != null
-                        ? DecorationImage(
-                      image: FileImage(File(_imageFile!.path)),
-                      fit: BoxFit.cover,
-
-                    )
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                GestureDetector(
+                  onTap: () {
+                    showModalBottomSheet(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return SafeArea(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: <Widget>[
+                              ListTile(
+                                leading: Icon(Icons.photo_library),
+                                title: Text('Choose from gallery'),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  _pickImageFromGallery();
+                                },
+                              ),
+                              ListTile(
+                                leading: Icon(Icons.photo_camera),
+                                title: Text('Take a picture'),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  _pickImageFromCamera();
+                                },
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    );
+                  },
+                  child: Container(
+                    height: 200,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[200],
+                      borderRadius: BorderRadius.circular(10.0),
+                      border: Border.all(
+                        color: _imageError ? Colors.red : Colors.grey,
+                        width: 2,
+                      ),
+                      image: _imageFile != null
+                          ? DecorationImage(
+                        image: FileImage(File(_imageFile!.path)),
+                        fit: BoxFit.cover,
+                      )
+                          : null,
+                    ),
+                    child: _imageFile == null
+                        ? Icon(Icons.add_a_photo, size: 50, color: Colors.grey)
                         : null,
                   ),
-                  child: _imageFile == null
-                      ? Icon(Icons.add_a_photo, size: 50, color: Colors.grey)
-                      : null,
                 ),
-              ),
-              SizedBox(height: 20),
-              TextField(
-                controller: _nameController,
-                decoration: InputDecoration(
-                  labelText: 'Name',
-                  border: OutlineInputBorder(),
-
+                if (_imageError)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0),
+                    child: Text(
+                      'Please select your product image',
+                      style: TextStyle(color: Colors.red),
+                    ),
+                  ),
+                SizedBox(height: 20),
+                TextFormField(
+                  controller: _nameController,
+                  decoration: InputDecoration(
+                    labelText: 'Name',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter the product name';
+                    }
+                    return null;
+                  },
                 ),
-              ),
-              SizedBox(height: 20),
-              TextField(
-                controller: _descriptionController,
-                decoration: InputDecoration(
-                  labelText: 'Description',
-                  border: OutlineInputBorder(),
+                SizedBox(height: 20),
+                TextFormField(
+                  controller: _descriptionController,
+                  decoration: InputDecoration(
+                    labelText: 'Description',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter the product description';
+                    }
+                    return null;
+                  },
                 ),
-              ),
-              SizedBox(height: 20),
-              TextField(
-                controller: _priceController,
-                decoration: InputDecoration(
-                  labelText: 'Price',
-                  border: OutlineInputBorder(),
+                SizedBox(height: 20),
+                TextFormField(
+                  controller: _priceController,
+                  decoration: InputDecoration(
+                    labelText: 'Price',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter the product price';
+                    }
+                    return null;
+                  },
                 ),
-                keyboardType: TextInputType.number,
-              ),
-              SizedBox(height: 20),
-              TextField(
-                controller: _itemsController,
-                decoration: InputDecoration(
-                  labelText: 'Items',
-                  border: OutlineInputBorder(),
+                SizedBox(height: 20),
+                TextFormField(
+                  controller: _itemsController,
+                  decoration: InputDecoration(
+                    labelText: 'Items',
+                    border: OutlineInputBorder(),
+                  ),
+                  keyboardType: TextInputType.number,
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter the number of items';
+                    }
+                    return null;
+                  },
                 ),
-                keyboardType: TextInputType.number,
-              ),
-              SizedBox(height: 20),
-              DropdownButtonFormField<String>(
-                value: _selectedCategory,
-                hint: Text('Select food Category'),
-                items: _categories.map((String category) {
-                  return DropdownMenuItem<String>(
-                    value: category,
-                    child: Text(category),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  setState(() {
-                    _selectedCategory = newValue;
-                  });
-                },
-                decoration: InputDecoration(
-                  labelText: 'Category',
-                  border: OutlineInputBorder(),
+                SizedBox(height: 20),
+                DropdownButtonFormField<String>(
+                  value: _selectedCategory,
+                  hint: Text('Select food Category'),
+                  items: _categories.map((String category) {
+                    return DropdownMenuItem<String>(
+                      value: category,
+                      child: Text(category),
+                    );
+                  }).toList(),
+                  onChanged: (String? newValue) {
+                    setState(() {
+                      _selectedCategory = newValue;
+                    });
+                  },
+                  decoration: InputDecoration(
+                    labelText: 'Category',
+                    border: OutlineInputBorder(),
+                  ),
+                  validator: (value) {
+                    if (value == null) {
+                      return 'Please select a category';
+                    }
+                    return null;
+                  },
+                  isExpanded: true,
+                  icon: Icon(Icons.arrow_drop_down, color: Colors.orange),
                 ),
-                isExpanded: true,
-                icon: Icon(Icons.arrow_drop_down, color: Colors.orange),
-              ),
-              SizedBox(height: 20),
-              MaterialButton(
-                height: 45,
-                onPressed: _isLoading ? null : () async {
-                  setState(() {
-                    _isLoading = true;
-                  });
-                  await _uploadImage();
-                  setState(() {
-                    _isLoading = false;
-                  });
-                },
-                color: Colors.orange,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: _isLoading
-                    ? CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
-                )
-                    : Text(
-                  'Add Product',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
+                SizedBox(height: 20),
+                MaterialButton(
+                  height: 45,
+                  onPressed: _isLoading
+                      ? null
+                      : () async {
+                    setState(() {
+                      _imageError = _imageFile == null;
+                    });
+                    if (_formKey.currentState!.validate() && _imageFile != null) {
+                      setState(() {
+                        _isLoading = true;
+                      });
+                      await _uploadImage();
+                      setState(() {
+                        _isLoading = false;
+                      });
+                    }
+                  },
+                  color: Colors.orange, // Button ka color
+                  disabledColor: Colors.orange, // Disabled hone par bhi same color rahega
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8.0),
+                  ),
+                  child: _isLoading
+                      ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: const [
+                      CircularProgressIndicator(
+                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                      ),
+                      SizedBox(width: 10), // Loader aur text ke beech mein space
+                      Text(
+                        'Loading...', // Optional loading text
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16.0,
+                        ),
+                      ),
+                    ],
+                  )
+                      : const Text(
+                    'Product Add',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 16.0,
+                    ),
                   ),
                 ),
-              ),
 
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
-
 }

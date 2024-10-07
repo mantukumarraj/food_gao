@@ -319,7 +319,7 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                   labelText: 'Phone Number',
                   icon: Icons.phone,
                   controller: _controller.phonenoController,
-                  keyboardType: TextInputType.phone,
+                  keyboardType: TextInputType.number,
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
                     LengthLimitingTextInputFormatter(10),
