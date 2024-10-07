@@ -99,6 +99,7 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
               },
             ),
 
+
           ],
         );
       },
@@ -109,7 +110,7 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
     try {
       final Reference storageRef = FirebaseStorage.instance.ref();
       final Reference imageRef = storageRef
-          .child('partner_images/${DateTime.now().millisecondsSinceEpoch}.jpg');
+          .child('user_images/${DateTime.now().millisecondsSinceEpoch}.jpg');
       await imageRef.putFile(imageFile);
       final String imageUrl = await imageRef.getDownloadURL();
       return imageUrl;
@@ -143,7 +144,10 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
         imageUrl = await _uploadImageToFirebaseStorage(_imageFile!) ?? '';
       }
 
-      await FirebaseFirestore.instance.collection('partners').doc(user.uid).update({
+      await FirebaseFirestore.instance
+          .collection('partners')
+          .doc(user.uid)
+          .update({
         'name': name,
         'age': age,
         'gender': gender,
@@ -151,13 +155,7 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
         'imageUrl': imageUrl,
       });
 
-      // Update ke baad success message show kare
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Profile updated successfully!')),
-      );
-
-      Navigator.pop(context); // Back to the previous screen
-
+      Navigator.pop(context);
     } catch (e) {
       print('Error updating profile: $e');
       ScaffoldMessenger.of(context).showSnackBar(
@@ -166,11 +164,9 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
     }
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.orange,
         elevation: 0,
@@ -200,8 +196,8 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
                         backgroundImage: _imageFile != null
                             ? FileImage(_imageFile!)
                             : _imageUrl != null
-                            ? NetworkImage(_imageUrl!) as ImageProvider
-                            : null,
+                                ? NetworkImage(_imageUrl!) as ImageProvider
+                                : null,
                         child: _imageFile == null && _imageUrl == null
                             ? const Icon(Icons.person, size: 50)
                             : null,
@@ -263,7 +259,7 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide:
-                        const BorderSide(color: Colors.orange, width: 1.0),
+                            const BorderSide(color: Colors.orange, width: 1.0),
                       ),
                     ),
                   ),
@@ -297,7 +293,7 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(15),
                             borderSide:
-                            BorderSide(color: Colors.orange, width: 2.0),
+                                BorderSide(color: Colors.orange, width: 2.0),
                           ),
                         ),
                         keyboardType: TextInputType.phone,
@@ -308,7 +304,7 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
                         style: TextStyle(
                           fontSize: 16,
                           color:
-                          Colors.black, // Ensure the text color is visible
+                              Colors.black, // Ensure the text color is visible
                         ),
                         enabled: false, // Read-only field
                       ),
@@ -330,7 +326,7 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide:
-                        const BorderSide(color: Colors.orange, width: 1.0),
+                            const BorderSide(color: Colors.orange, width: 1.0),
                       ),
                     ),
                     keyboardType: TextInputType.number,
@@ -340,9 +336,9 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
                     value: _selectedGender,
                     items: ['Male', 'Female', 'Other']
                         .map((label) => DropdownMenuItem(
-                      value: label,
-                      child: Text(label),
-                    ))
+                              value: label,
+                              child: Text(label),
+                            ))
                         .toList(),
                     onChanged: (value) {
                       setState(() {
@@ -362,7 +358,7 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide:
-                        const BorderSide(color: Colors.orange, width: 1.0),
+                            const BorderSide(color: Colors.orange, width: 1.0),
                       ),
                     ),
                   ),
@@ -382,7 +378,7 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide:
-                        const BorderSide(color: Colors.orange, width: 1.0),
+                            const BorderSide(color: Colors.orange, width: 1.0),
                       ),
                     ),
                   ),
@@ -390,7 +386,7 @@ class _ProfileUpdateScreenState extends State<ProfileUpdateScreen> {
                   ElevatedButton(
                     onPressed: _submitUpdates,
                     child: Text(
-                      'Profile Update ',
+                      'Update Profile',
                       style: TextStyle(
                         color: Colors.white,
                       ),
