@@ -21,8 +21,8 @@ class _RegistrationPageState extends State<RegistrationPage> {
   final _formKey = GlobalKey<FormState>();
   String? _selectedGender;
   File? _imageFile;
-  bool _imageSelected = true; // Track if the image is selected
-  bool _isLoading = false; // Track the loading state
+  bool _imageSelected = true;
+  bool _isLoading = false;
 
   final ImagePicker _picker = ImagePicker();
 
@@ -39,7 +39,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
     setState(() {
       if (pickedFile != null) {
         _imageFile = File(pickedFile.path);
-        _imageSelected = true; // Set image selected to true
+        _imageSelected = true;
       }
     });
   }
@@ -49,7 +49,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
     setState(() {
       if (pickedFile != null) {
         _imageFile = File(pickedFile.path);
-        _imageSelected = true; // Set image selected to true
+        _imageSelected = true;
       }
     });
   }
@@ -87,11 +87,11 @@ class _RegistrationPageState extends State<RegistrationPage> {
       setState(() {
         _imageSelected = _imageFile != null;
       });
-      return; // Prevent further execution if validation fails
+      return;
     }
 
     setState(() {
-      _isLoading = true; // Start loading
+      _isLoading = true;
     });
 
     final registerProvider = Provider.of<RegisterFirebaseProvider>(context, listen: false);

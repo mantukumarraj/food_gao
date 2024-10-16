@@ -61,6 +61,7 @@ dependencies:
   google_fonts: ^4.0.4
   google_maps_webservice: ^0.0.20-nullsafety.5  # Use a null-safe compatible version
   http: ^0.13.0
+  firebase_messaging: ^15.1.0
 
 
 

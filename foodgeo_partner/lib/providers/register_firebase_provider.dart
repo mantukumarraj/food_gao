@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
@@ -32,11 +33,19 @@ class RegisterFirebaseProvider with ChangeNotifier {
         throw Exception("User not logged in");
       }
 
+      // Retrieve FCM Token
+
+      String? deviceToken = await FirebaseMessaging.instance.getToken();
+      if (deviceToken == null) {
+        throw Exception("Failed to retrieve device token");
+      }
+
       String imageUrl = '';
       if (imageFile != null) {
         imageUrl = await uploadImageToFirebaseStorage(imageFile);
       }
 
+      // Save user details along with device token
       await FirebaseFirestore.instance.collection('partners').doc(user.uid).set({
         'partnerId': user.uid,
         'name': name.trim(),
@@ -45,6 +54,7 @@ class RegisterFirebaseProvider with ChangeNotifier {
         'age': age.trim(),
         'address': address.trim(),
         'imageUrl': imageUrl,
+        'deviceToken': deviceToken, // Add device token here
       });
     } catch (e) {
       print('Error registering user: $e');

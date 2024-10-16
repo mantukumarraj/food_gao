@@ -3,15 +3,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 class DriverDetailsScreen extends StatefulWidget {
   final String driverId;
-
   DriverDetailsScreen({required this.driverId});
 
   @override
   _DriverDetailsScreenState createState() => _DriverDetailsScreenState();
 }
-
 class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
-
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   DocumentSnapshot? _driverDetails;
   @override
@@ -22,7 +19,7 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
 
   Future<void> _fetchDriverDetails() async {
     try {
-      // Fetch driver details from Firestore using driverId
+
       final driverSnapshot = await _firestore.collection('delivery').doc(widget.driverId).get();
 
       if (driverSnapshot.exists) {
@@ -30,7 +27,7 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
           _driverDetails = driverSnapshot;
         });
       } else {
-        // Handle the case where the driver document does not exist
+
         print('Driver not found');
         setState(() {
           _driverDetails = null;
@@ -66,7 +63,7 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
               borderRadius: BorderRadius.circular(15.0),
             ),
             child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: padding, vertical: padding /2), // Reduced vertical padding
+              padding: EdgeInsets.symmetric(horizontal: padding, vertical: padding /2),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -84,12 +81,12 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
                             Text(
                               'Name: ${_driverDetails!['name'] ?? 'N/A'}',
                             ),
-                            SizedBox(height: 4), // Reduced space
+                            SizedBox(height: 4),
                             Text(
                               'Address: ${_driverDetails!['address'] ?? 'N/A'}',
                               style: TextStyle(fontSize: screenWidth * 0.04),
                             ),
-                            SizedBox(height: 4), // Reduced space
+                            SizedBox(height: 4),
                             Text(
                               'Age: ${_driverDetails!['age'] ?? 'N/A'}',
                               style: TextStyle(fontSize: screenWidth * 0.04),
