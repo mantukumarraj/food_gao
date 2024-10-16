@@ -111,7 +111,7 @@ class _ProductEditState extends State<ProductEdit> {
     final Map<String, dynamic> productData = {
       'name': name,
       'description': description,
-      'price': double.parse(price),
+      'price': int.parse(price),
       'items': int.parse(quantity),
       'image': imageUrl,
       'category': _selectedCategory,
@@ -268,7 +268,7 @@ class _ProductEditState extends State<ProductEdit> {
                     borderRadius: BorderRadius.circular(8.0),
                   ),
                   child: Text(
-                    'Update Product',
+                    ' Product Update',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 16,

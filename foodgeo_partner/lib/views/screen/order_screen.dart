@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'cooking_screen.dart';
-import 'delivery_boyslist_screen.dart';
+import '../../product/cooking_screen.dart';
+import '../../product/delivery_boyslist_screen.dart';
 
 class OrdersScreen extends StatefulWidget {
   @override
@@ -34,28 +34,21 @@ class _OrdersScreenState extends State<OrdersScreen> {
       final querySnapshot = await _firestore
           .collection('orders')
           .where('restaurantId', isEqualTo: restaurantId)
+          .orderBy('orderTime', descending: true)
           .get();
+
+      // Filter out orders with status 'Delivered' or 'Cancelled'
       setState(() {
-        _orders = querySnapshot.docs;
+        _orders = querySnapshot.docs
+            .where((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          return data['status'] != 'Delivered' && data['status'] != 'Cancelled';
+        }).toList();
         _filteredOrders = _orders;
       });
     } catch (e) {
       print('Error fetching orders: $e');
     }
-  }
-
-  void _filterOrders(String query) {
-    final filteredOrders = _orders.where((order) {
-      final name = order['name'].toLowerCase();
-      final description = order['description'].toLowerCase();
-      final searchLower = query.toLowerCase();
-      return name.contains(searchLower) || description.contains(searchLower);
-    }).toList();
-
-    setState(() {
-      _searchQuery = query;
-      _filteredOrders = filteredOrders;
-    });
   }
 
   Future<void> _handleAction(String action, DocumentSnapshot order) async {
@@ -84,8 +77,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
   String _getMonthName(int month) {
     const months = [
-      'January', 'February', 'March', 'April', 'May', 'June',
-      'July', 'August', 'September', 'October', 'November', 'December'
+      'January', 'February', 'March', 'April', 'May', 'June', 'July',
+      'August', 'September', 'October', 'November', 'December'
     ];
     return months[month - 1];
   }
@@ -110,7 +103,28 @@ class _OrdersScreenState extends State<OrdersScreen> {
         children: [
           SizedBox(height: 20),
           Expanded(
-            child: ListView.builder(
+            child: _filteredOrders.isEmpty
+                ? Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.shopping_cart_outlined,
+                    size: 80,
+                    color: Colors.grey,
+                  ),
+                  SizedBox(height: 10),
+                  Text(
+                    'No Orders Available',
+                    style: TextStyle(
+                      fontSize: 20,
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            )
+                : ListView.builder(
               itemCount: _filteredOrders.length,
               itemBuilder: (context, index) {
                 final order = _filteredOrders[index].data() as Map<String, dynamic>;
@@ -118,8 +132,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
 
                 return GestureDetector(
                   onTap: () {
-                    // Navigate to CookingScreen if the status is completed
-                    if (orderStatus == 'preparation'  || orderStatus == 'ready to deliver') {
+                    // Navigate to CookingScreen if the status is 'preparation' or 'ready to deliver'
+                    if (orderStatus == 'preparation' || orderStatus == 'ready to deliver') {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
@@ -130,7 +144,8 @@ class _OrdersScreenState extends State<OrdersScreen> {
                   },
                   child: Card(
                     elevation: 4,
-                    margin: EdgeInsets.symmetric(horizontal: padding, vertical: padding / 2),
+                    margin: EdgeInsets.symmetric(
+                        horizontal: padding, vertical: padding / 2),
                     child: Padding(
                       padding: EdgeInsets.all(padding),
                       child: Column(
@@ -151,42 +166,36 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                       'Order Date Time : ${_formatDate(order['orderTime'])}',
                                       style: TextStyle(fontSize: fontSize),
                                     ),
-                                    Text(
-                                      'Name : ${order['name']}',
-                                    ),
+                                    Text('Name : ${order['name']}'),
                                     SizedBox(height: padding / 2),
-                                    Text(
-                                      'Price : ${order['price']}',
-                                    ),
+                                    Text('Price : ${order['price']}'),
                                     SizedBox(height: padding / 2),
-                                    Text(
-                                      'Status: $orderStatus',
-                                      style: TextStyle(
-                                        color: Colors.grey,
-                                        fontSize: fontSize * 0.9,
-                                      ),
-                                    ),
+                                    Text('Status: $orderStatus'),
                                   ],
                                 ),
                               ),
                             ],
                           ),
                           SizedBox(height: padding),
-                          if (orderStatus != 'order confirm' && orderStatus != 'preparation' && orderStatus !='ready to deliver' && orderStatus != 'Out for Delivery'  && orderStatus != 'Cancelled')
+                          if (orderStatus != 'order confirm' &&
+                              orderStatus != 'preparation' &&
+                              orderStatus != 'ready to deliver' &&
+                              orderStatus != 'Delivered' &&
+                              orderStatus != 'Cancelled')
                             Row(
                               children: [
                                 Expanded(
                                   child: TextButton(
-                                    onPressed: () =>
-                                        _handleAction('Accept', _filteredOrders[index]),
+                                    onPressed: () => _handleAction(
+                                        'Accept', _filteredOrders[index]),
                                     child: Text('Accept'),
                                   ),
                                 ),
                                 SizedBox(width: padding / 2),
                                 Expanded(
                                   child: TextButton(
-                                    onPressed: () =>
-                                        _handleAction('Cancel', _filteredOrders[index]),
+                                    onPressed: () => _handleAction(
+                                        'Cancel', _filteredOrders[index]),
                                     child: Text('Cancel'),
                                   ),
                                 ),
@@ -205,17 +214,25 @@ class _OrdersScreenState extends State<OrdersScreen> {
                                     ),
                                   );
                                 },
-                                child: Text('Go to restaurant'),
+                                child: Text('Send to restaurant'),
                               ),
                             ),
-
                           if (orderStatus == 'ready to deliver')
                             Align(
                               alignment: Alignment.centerRight,
                               child: TextButton(
                                 onPressed: () {
-                                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => DeliveryBoysScreen(orderId: order['orderId'],),));                                },
-                                child: Text('Ready to dilever '),
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (context) =>
+                                          DeliveryBoysScreen(
+                                            orderId: order['orderId'],
+                                          ),
+                                    ),
+                                  );
+                                },
+                                child: Text('Ready to deliver'),
                               ),
                             ),
                         ],

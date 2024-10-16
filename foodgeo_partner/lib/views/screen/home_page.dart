@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import '../../product/productDetail_screen.dart';
-import 'Profile_page.dart';
+import 'Profile.dart';
 import 'order_screen.dart';
 
 class HomePage extends StatefulWidget {
@@ -122,38 +122,38 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: _selectedIndex == 0
           ? AppBar(
-        automaticallyImplyLeading: false,
-        title: Container(
-          padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 0.0),
-          margin: EdgeInsets.all(5.0),
-          decoration: BoxDecoration(
-            color: Colors.grey[200],
-            borderRadius: BorderRadius.circular(30.0),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.search, color: Colors.black),
-              const SizedBox(
-                width: 20,
-              ),
-              Expanded(
-                child: TextField(
-                  onChanged: (value) {
-                    setState(() {
-                      _searchText = value;
-                      _filterProducts();
-                    });
-                  },
-                  decoration: InputDecoration(
-                    hintText: 'Search...',
-                    border: InputBorder.none,
-                  ),
+                automaticallyImplyLeading: false,
+              title: Container(
+                padding: EdgeInsets.symmetric(horizontal: 10.0, vertical: 0.0),
+                margin: EdgeInsets.all(5.0),
+                decoration: BoxDecoration(
+                  color: Colors.grey[200],
+                  borderRadius: BorderRadius.circular(30.0),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.search, color: Colors.black),
+                    const SizedBox(
+                      width: 20,
+                    ),
+                    Expanded(
+                      child: TextField(
+                        onChanged: (value) {
+                          setState(() {
+                            _searchText = value;
+                            _filterProducts();
+                          });
+                        },
+                        decoration: InputDecoration(
+                          hintText: 'Search...',
+                          border: InputBorder.none,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
-      )
+            )
           : null,
       body: _pages[_selectedIndex],
       bottomNavigationBar: BottomNavigationBar(
@@ -267,7 +267,7 @@ class _HomePageState extends State<HomePage> {
                         borderRadius: BorderRadius.circular(10.0),
                         image: DecorationImage(
                           image:
-                          AssetImage('assets/Images/resturant image.jpeg'),
+                              AssetImage('assets/Images/resturant image.jpeg'),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -319,8 +319,8 @@ class _HomePageState extends State<HomePage> {
               itemCount: _showAllProducts
                   ? _filteredProducts.length
                   : (_filteredProducts.length > 4
-                  ? 4
-                  : _filteredProducts.length),
+                      ? 4
+                      : _filteredProducts.length),
               itemBuilder: (context, index) {
                 final product = _filteredProducts[index];
 
@@ -410,7 +410,7 @@ class _HomePageState extends State<HomePage> {
                     child: Text(
                       'Recommended for you',
                       style:
-                      TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                     ),
                   ),
                   Spacer(),

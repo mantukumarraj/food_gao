@@ -1,8 +1,8 @@
 import 'dart:io';
-import 'package:flutter/material.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 class RegisterControllers {
@@ -11,6 +11,7 @@ class RegisterControllers {
   final TextEditingController ownerNameController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
   final TextEditingController locationlongitudeController = TextEditingController();
+  final TextEditingController locationlatitudeController = TextEditingController();
   final TextEditingController phonenoController = TextEditingController();
   String category = '';
 
@@ -33,6 +34,7 @@ class RegisterControllers {
         'phoneNo': phonenoController.text.trim(),
         'location': locationController.text.trim(),
         'locationlongitude': locationlongitudeController.text.trim(),
+        'locationlatitude':locationlatitudeController.text.trim(),
         'category': category,
         'imageUrl': imageUrl,
         'restaurantId': restaurantId,

@@ -6,6 +6,7 @@ import 'edit_product_screen.dart';
 class ProductListScreen extends StatelessWidget {
   final String restaurantId;
   ProductListScreen({required this.restaurantId});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -38,203 +39,200 @@ class ProductListScreen extends StatelessWidget {
             return Center(child: CircularProgressIndicator());
           } else if (restaurantSnapshot.hasError) {
             return Center(child: Text('Error: ${restaurantSnapshot.error}'));
-          } else if (!restaurantSnapshot.hasData ||
-              !restaurantSnapshot.data!.exists) {
+          } else if (!restaurantSnapshot.hasData || !restaurantSnapshot.data!.exists) {
             return Center(child: Text('Restaurant not found.'));
           } else {
-            var restaurantData =
-                restaurantSnapshot.data!.data() as Map<String, dynamic>;
-            return StreamBuilder<QuerySnapshot>(
-              stream: FirebaseFirestore.instance
-                  .collection('products')
-                  .where('restaurantId', isEqualTo: restaurantId)
-                  .snapshots(),
-              builder: (context, productSnapshot) {
-                if (productSnapshot.connectionState ==
-                    ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                } else if (productSnapshot.hasError) {
-                  return Center(child: Text('Error: ${productSnapshot.error}'));
-                } else if (!productSnapshot.hasData ||
-                    productSnapshot.data!.docs.isEmpty) {
-                  return Center(child: Text('No products found.'));
-                } else {
-                  var products = productSnapshot.data!.docs;
-                  return ListView(
-                    children: [
-                      // Restaurant Details
-                      Card(
-                        margin: EdgeInsets.all(5.0),
-                        elevation: 5.0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10.0),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              restaurantData['imageUrl'] != null
-                                  ? Image.network(
-                                      restaurantData['imageUrl'],
-                                      width: double.infinity,
-                                      height: 150,
-                                      fit: BoxFit.cover,
-                                    )
-                                  : Icon(Icons.restaurant, size: 100),
-                              SizedBox(height: 10),
-                              Text(
-                                'Restaurant Name: ${restaurantData['name'] ?? 'No restaurant name'}',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                              SizedBox(height: 3),
-                              Text('Owner: ${restaurantData['ownerName'] ?? 'No owner'}',
-                                style: TextStyle(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black87,
-                                ),
-                              ),
-                              Text('Address: ${restaurantData['address'] ?? 'No address'}'),
-                              Text('Location: ${restaurantData['location'] ?? 'No location'}'),
-                              Text('Category: ${restaurantData['category'] ?? 'No category'}'),
-                            ],
+            var restaurantData = restaurantSnapshot.data!.data() as Map<String, dynamic>;
+
+            return Column(
+              children: [
+                // Restaurant Details Card
+                Card(
+                  margin: EdgeInsets.all(5.0),
+                  elevation: 5.0,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10.0),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        restaurantData['imageUrl'] != null
+                            ? ClipRRect(
+                          borderRadius: BorderRadius.only(
+                            topLeft: Radius.circular(6),
+                            topRight: Radius.circular(6),
+                            bottomRight: Radius.circular(6),
+                            bottomLeft: Radius.circular(6),
+
+                          ),
+                          child: Image.network(
+                            restaurantData['imageUrl'],
+                            width: double.infinity,
+                            height: 200, // Reduced height
+                            fit: BoxFit.cover,
+                          ),
+                        )
+                            : Icon(Icons.restaurant, size: 100),
+                        SizedBox(height: 10),
+                        Text(
+                          'Restaurant Name: ${restaurantData['name'] ?? 'No restaurant name'}',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
                           ),
                         ),
-                      ),
-                      GridView.builder(
-                        shrinkWrap: true,
-                        physics: NeverScrollableScrollPhysics(),
-                        itemCount: products.length,
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 10.0,
-                          mainAxisSpacing: 10.0,
-                          childAspectRatio: 0.65, // Adjust as needed
+                        SizedBox(height: 3),
+                        Text('Owner: ${restaurantData['ownerName'] ?? 'No owner'}',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
                         ),
-                        itemBuilder: (context, index) {
-                          var product =
-                              products[index].data() as Map<String, dynamic>;
-                          String productId =
-                              products[index].id;
+                        Text('Address: ${restaurantData['address'] ?? 'No address'}'),
+                        Text('Location: ${restaurantData['location'] ?? 'No location'}'),
+                        Text('Category: ${restaurantData['category'] ?? 'No category'}'),
+                      ],
+                    ),
+                  ),
+                ),
 
-                          return GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) =>
-                                      ProductDetailScreen(product: product),
+                Expanded(
+                  child: StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('products')
+                        .where('restaurantId', isEqualTo: restaurantId)
+                        .snapshots(),
+                    builder: (context, productSnapshot) {
+                      if (productSnapshot.connectionState == ConnectionState.waiting) {
+                        return Center(child: CircularProgressIndicator());
+                      } else if (productSnapshot.hasError) {
+                        return Center(child: Text('Error: ${productSnapshot.error}'));
+                      } else if (!productSnapshot.hasData || productSnapshot.data!.docs.isEmpty) {
+                        return Center(child: Text('No products found.'));
+                      } else {
+                        var products = productSnapshot.data!.docs;
+                        return GridView.builder(
+                          padding: EdgeInsets.all(8.0),
+                          itemCount: products.length,
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 10.0,
+                            mainAxisSpacing: 10.0,
+                            childAspectRatio: 0.65,
+                          ),
+                          itemBuilder: (context, index) {
+                            var product = products[index].data() as Map<String, dynamic>;
+                            String productId = products[index].id;
+
+                            return GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => ProductDetailScreen(product: product),
+                                  ),
+                                );
+                              },
+                              child: Card(
+                                elevation: 5.0,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(5.0),
                                 ),
-                              );
-                            },
-                            child: Card(
-                              elevation: 5.0,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(5.0),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Expanded(
-                                    child: Stack(
-                                      children: [
-                                        product['image'] != null
-                                            ? ClipRRect(
-                                                borderRadius:
-                                                    BorderRadius.vertical(
-                                                        top: Radius.circular(5.0),
-                                                        bottom: Radius.circular(5.0),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                                  children: [
+                                    Expanded(
+                                      child: Stack(
+                                        children: [
+                                          product['image'] != null
+                                              ? ClipRRect(
+                                            borderRadius: BorderRadius.vertical(
+                                              top: Radius.circular(5.0),
+                                              bottom: Radius.circular(5.0),
+                                            ),
+                                            child: Image.network(
+                                              product['image'],
+                                              fit: BoxFit.cover,
+                                              width: double.infinity,
+                                            ),
+                                          )
+                                              : Icon(Icons.fastfood, size: 100),
+                                        ],
+                                      ),
+                                    ),
+                                    Padding(
+                                      padding: const EdgeInsets.all(8.0),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            'Name: ${product['name'] ?? 'No product name'}',
+                                            style: TextStyle(fontWeight: FontWeight.bold),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          Text(
+                                            'Des: ${product['description'] ?? 'No product description'}',
+                                            style: TextStyle(fontWeight: FontWeight.bold),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          SizedBox(height: 4),
+                                          Text('Price: ${product['price']}'),
+                                          Text('Items: ${product['items']}'),
+                                          Text('Category: ${product['category']}', maxLines: 1, overflow: TextOverflow.ellipsis),
+                                          SizedBox(height: 8),
+                                          Row(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              TextButton(
+                                                onPressed: () {
+                                                  Navigator.pushReplacement(
+                                                    context,
+                                                    MaterialPageRoute(
+                                                      builder: (context) => ProductEdit(
+                                                        productId: productId,
+                                                        onProductUpdated: () {},
+                                                      ),
                                                     ),
-                                                child: Image.network(
-                                                  product['image'],
-                                                  fit: BoxFit.cover,
-                                                  width: double.infinity,
-                                                ),
-                                              )
-                                            : Icon(Icons.fastfood, size: 100),
-                                      ],
-                                    ),
-                                  ),
-                                  Padding(
-                                    padding: const EdgeInsets.all(8.0),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          'Name: ${product['name'] ?? 'No product name'}',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        Text(
-                                          'Des: ${product['description'] ?? 'No product description'}',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        SizedBox(height: 4),
-                                        Text('Price: ${product['price']}'),
-                                        Text('items: ${product['items']}'),
-                                        Text('category: ${product['category']}', maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,),
-                                        SizedBox(height: 8),
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            TextButton(
-                                              onPressed: () {
-                                               Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => ProductEdit(productId: productId, onProductUpdated: () {}, ),));
-                                              },
-                                              child: Text(
-                                                'Edit',
-                                                style: TextStyle(
-                                                    color: Colors.blue),
+                                                  );
+                                                },
+                                                child: Text('Edit', style: TextStyle(color: Colors.blue)),
                                               ),
-                                            ),
-                                            SizedBox(width: 8),
-                                            TextButton(
-                                              onPressed: () {
-                                                _deleteProduct(
-                                                    context, productId);
-                                              },
-                                              child: Text(
-                                                'Delete',
-                                                style: TextStyle(
-                                                    color: Colors.red),
+                                              SizedBox(width: 8),
+                                              TextButton(
+                                                onPressed: () {
+                                                  _deleteProduct(context, productId);
+                                                },
+                                                child: Text('Delete', style: TextStyle(color: Colors.red)),
                                               ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                ],
+                                  ],
+                                ),
                               ),
-                            ),
-                          );
-                        },
-                      )
-                    ],
-                  );
-                }
-              },
+                            );
+                          },
+                        );
+                      }
+                    },
+                  ),
+                ),
+              ],
             );
           }
         },
       ),
     );
   }
+
   Future<void> _deleteProduct(BuildContext context, String productId) async {
     bool? confirmDelete = await showDialog<bool>(
       context: context,
@@ -258,15 +256,10 @@ class ProductListScreen extends StatelessWidget {
 
     if (confirmDelete == true) {
       try {
-        await FirebaseFirestore.instance
-            .collection('products')
-            .doc(productId)
-            .delete();
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Product deleted successfully')));
+        await FirebaseFirestore.instance.collection('products').doc(productId).delete();
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Product deleted successfully')));
       } catch (error) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error deleting product')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error deleting product')));
       }
     }
   }
