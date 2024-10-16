@@ -28,16 +28,15 @@ class CustomTextField extends StatelessWidget {
     return TextFormField(
       controller: controller,
       obscureText: obscureText,
-      keyboardType: keyboardType, // Use keyboardType here
-      inputFormatters: inputFormatters, // Use inputFormatters here
+      keyboardType: labelText == "Phone Number" ? TextInputType.text : TextInputType.text,
       validator: validator,
       decoration: InputDecoration(
-        prefixIcon: Icon(icon, color: Colors.black),
+        prefixIcon: Icon(icon, color: Colors.orange),
         suffixIcon: suffixIcon,
         labelText: labelText,
         labelStyle: TextStyle(
           fontWeight: FontWeight.bold,
-          color: Colors.black,
+          color: Colors.orange,
         ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),

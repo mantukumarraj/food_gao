@@ -6,10 +6,10 @@ import 'otpverification_screen.dart';
 
 class PhoneAuthView extends StatefulWidget {
   @override
-  _OtpScreenState createState() => _OtpScreenState();
+  _PhoneAuthViewState createState() => _PhoneAuthViewState();
 }
 
-class _OtpScreenState extends State<PhoneAuthView> {
+class _PhoneAuthViewState extends State<PhoneAuthView> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   late String verificationId;
   bool isLoading = false;
@@ -29,7 +29,7 @@ class _OtpScreenState extends State<PhoneAuthView> {
         });
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => RegistrationPage(phoneNumber: phoneNumber)),
+          MaterialPageRoute(builder: (context) => RegistrationPage()),
         );
       },
       verificationFailed: (FirebaseAuthException e) {
@@ -73,7 +73,7 @@ class _OtpScreenState extends State<PhoneAuthView> {
         height: MediaQuery.of(context).size.height,
         child: Stack(
           children: [
-            // Yellow container
+            // Orange container
             Container(
               width: double.infinity,
               height: 400,
@@ -87,7 +87,7 @@ class _OtpScreenState extends State<PhoneAuthView> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Image.asset('assets/Images/phoneicon.png',color: Colors.white,width: 60,height: 100,),
+                  Image.asset('assets/Images/phone icon.png', color: Colors.white, width: 60, height: 100,),
                   SizedBox(height: 10),
                   Text(
                     "MOBILE PHONE",
@@ -110,7 +110,7 @@ class _OtpScreenState extends State<PhoneAuthView> {
                 ],
               ),
             ),
-            // White container overlapping the yellow container
+            // White container overlapping the orange container
             Positioned(
               top: 330,
               left: 0,
