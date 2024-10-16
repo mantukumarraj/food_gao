@@ -173,7 +173,7 @@ class _RestaurantEditScreenState extends State<RestaurantEditScreen> {
                 labelText: 'Phone Number',
                 icon: Icons.phone,
                 controller: _controller.phonenoController,
-                keyboardType: TextInputType.number,
+                keyboardType: TextInputType.phone,
                 inputFormatters: [
                   FilteringTextInputFormatter.digitsOnly,
                   LengthLimitingTextInputFormatter(10),
