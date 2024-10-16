@@ -33,7 +33,7 @@ class _SplashScreenState extends State<SplashScreen> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => RegistrationPage(),
+              builder: (context) => RegistrationPage(phoneNumber: phoneNumber,),
             ),
           );
         }

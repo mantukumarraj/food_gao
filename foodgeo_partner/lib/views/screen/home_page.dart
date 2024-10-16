@@ -5,7 +5,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import '../../product/productDetail_screen.dart';
-import 'Profile.dart';
+import 'Profile_page.dart';
 import 'order_screen.dart';
 
 class HomePage extends StatefulWidget {

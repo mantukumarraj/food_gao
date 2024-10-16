@@ -29,7 +29,7 @@ class _PhoneAuthViewState extends State<PhoneAuthView> {
         });
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => RegistrationPage()),
+          MaterialPageRoute(builder: (context) => RegistrationPage(phoneNumber: phoneNumber,)),
         );
       },
       verificationFailed: (FirebaseAuthException e) {
