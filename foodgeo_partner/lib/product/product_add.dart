@@ -5,7 +5,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
-
 import '../views/screen/home_page.dart';
 
 class ProductAdd extends StatefulWidget {
@@ -123,7 +122,6 @@ class _ProductAddState extends State<ProductAdd> {
         'image': downloadUrl.toString(),
         'restaurantId': widget.restaurantId,
         'partnerId': userId,
-
       };
 
       await FirebaseFirestore.instance.collection('products').doc(productId).set(productData);
@@ -324,9 +322,7 @@ class _ProductAddState extends State<ProductAdd> {
                 SizedBox(height: 20),
                 MaterialButton(
                   height: 45,
-                  onPressed: _isLoading
-                      ? null
-                      : () async {
+                  onPressed: _isLoading ? null : () async {
                     setState(() {
                       _imageError = _imageFile == null;
                     });
@@ -340,37 +336,22 @@ class _ProductAddState extends State<ProductAdd> {
                       });
                     }
                   },
-                  color: Colors.orange, // Button ka color
-                  disabledColor: Colors.orange, // Disabled hone par bhi same color rahega
+                  color: Colors.orange,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8.0),
                   ),
                   child: _isLoading
-                      ? Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: const [
-                      CircularProgressIndicator(
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                      ),
-                      SizedBox(width: 10), // Loader aur text ke beech mein space
-                      Text(
-                        'Loading...', // Optional loading text
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16.0,
-                        ),
-                      ),
-                    ],
+                      ? CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.blueAccent),
                   )
-                      : const Text(
-                    'Product Add',
+                      : Text(
+                    ' Product Add',
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 16.0,
                     ),
                   ),
                 ),
-
               ],
             ),
           ),

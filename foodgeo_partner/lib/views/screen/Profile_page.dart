@@ -6,6 +6,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
+import '../../product/DeliveredProductsScreen.dart';
+import '../../product/cancelledOrdersScreen.dart';
+
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({Key? key}) : super(key: key);
 
@@ -34,8 +37,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
             .collection('partners')
             .doc(_currentUser!.uid)
             .get();
-
-        // Check if restaurant is already registered
         QuerySnapshot restaurantQuery = await FirebaseFirestore.instance
             .collection('restaurants')
             .where('partnerId', isEqualTo: _currentUser!.uid)
@@ -92,8 +93,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ],
             ),
           ),
-
-          // Menu items
           Expanded(
             child: ListView(
               children: [
@@ -117,23 +116,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     );
                   }
                 }),
+                // SwitchListTile(
+                //   title: Text(
+                //     'Notification',
+                //     style: GoogleFonts.poppins(fontSize: 18, color: Colors.black87),
+                //   ),
+                //   secondary: Icon(Icons.notifications, color: Colors.black26),
+                //   value: switchValue,
+                //   onChanged: (bool value) {
+                //     setState(() {
+                //       switchValue = value;
+                //     });
+                //   },
+                //   activeColor: Color(0xFFFFA726),
+                // ),
 
-                // Notification item with switch
-                SwitchListTile(
-                  title: Text(
-                    'Notification',
-                    style: GoogleFonts.poppins(fontSize: 18, color: Colors.black87),
-                  ),
-                  secondary: Icon(Icons.notifications, color: Colors.black26),
-                  value: switchValue,
-                  onChanged: (bool value) {
-                    setState(() {
-                      switchValue = value;
-                    });
-                  },
-                  activeColor: Color(0xFFFFA726),
-                ),
-
+                _buildMenuItem(Icons.assignment_turned_in_outlined, 'Delivered Product', () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => DeliveredProductsScreen(),
+                    ),
+                  );
+                }),
+                _buildMenuItem(Icons.cancel_presentation, 'Cancelled Product', () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CancelledOrdersScreen(),
+                    ),
+                  );
+                }),
                 const Divider(),
                 _buildMenuItem(Icons.exit_to_app, 'Logout', () {
                   _showLogoutDialog(context);

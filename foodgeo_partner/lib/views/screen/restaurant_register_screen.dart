@@ -7,20 +7,21 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:location/location.dart' as loc;
 import 'package:geocoding/geocoding.dart' as geo;
-
 import '../../controller/restaurant_registration_controller.dart';
 import '../widget/costum_textfeld.dart';
 import 'package:flutter/services.dart';
 
 class RestaurantRegistrationPage extends StatefulWidget {
   @override
-  _RestaurantRegistrationPageState createState() => _RestaurantRegistrationPageState();
+  _RestaurantRegistrationPageState createState() =>
+      _RestaurantRegistrationPageState();
 }
 
-class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage> {
+class _RestaurantRegistrationPageState
+    extends State<RestaurantRegistrationPage> {
   final RegisterControllers _controller = RegisterControllers();
-  final Completer<GoogleMapController> _mapcontroller = Completer<GoogleMapController>();
-
+  final Completer<GoogleMapController> _mapcontroller =
+  Completer<GoogleMapController>();
 
   File? _selectedImage;
   bool _isLoading = false;
@@ -43,6 +44,20 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
   final Set<Polyline> _polyline = {};
   loc.LocationData? _currentLocation;
   TextEditingController _searchController = TextEditingController();
+
+  final ButtonStyle buttonStyle = ElevatedButton.styleFrom(
+    padding: const EdgeInsets.all(15),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(12),
+    ),
+  ).copyWith(
+    backgroundColor: MaterialStateProperty.all<Color>(Colors.orange), // Ensures consistent color
+  );
+
+// Define the common loading indicator
+  final Widget loadingIndicator = const CircularProgressIndicator(
+    color: Colors.white,
+  );
 
   @override
   void initState() {
@@ -90,13 +105,16 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
           ),
         );
 
+        // Update _controller with current location
+        _controller.locationlongitudeController.text = currentLatLng.longitude.toString();
+        _controller.locationlatitudeController.text = currentLatLng.latitude.toString();
+
         setState(() {});
       }
     } catch (e) {
       print('Error getting location: $e');
     }
   }
-
 
   Future<void> _searchLocation(String query) async {
     setState(() {
@@ -110,7 +128,9 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
         final LatLng cityLocation = LatLng(locations.first.latitude, locations.first.longitude);
         await controller.animateCamera(CameraUpdate.newLatLngZoom(cityLocation, 12.0));
 
+        // Update _controller with searched location
         _controller.locationlongitudeController.text = cityLocation.longitude.toString();
+        _controller.locationlatitudeController.text = cityLocation.latitude.toString();
         List<geo.Placemark> placemarks = await geo.placemarkFromCoordinates(
           cityLocation.latitude,
           cityLocation.longitude,
@@ -119,7 +139,7 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
         String address = "";
         if (placemarks.isNotEmpty) {
           geo.Placemark place = placemarks.first;
-          address = "${place.name}, ${place.locality},${place.administrativeArea}, ${place.country}";
+          address = "${place.name}, ${place.locality}, ${place.administrativeArea}, ${place.country}";
           _controller.locationController.text = address;
           setState(() {
             _isLocationSelected = true;
@@ -185,7 +205,7 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar:AppBar(
+      appBar: AppBar(
         flexibleSpace: Container(
           decoration: BoxDecoration(
             gradient: LinearGradient(
@@ -209,7 +229,6 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
           },
         ),
       ),
-
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(20.0),
@@ -319,7 +338,7 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                   labelText: 'Phone Number',
                   icon: Icons.phone,
                   controller: _controller.phonenoController,
-                  keyboardType: TextInputType.number,
+                  keyboardType: TextInputType.phone,
                   inputFormatters: [
                     FilteringTextInputFormatter.digitsOnly,
                     LengthLimitingTextInputFormatter(10),
@@ -390,13 +409,16 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                                 _isLocationSelected
                                     ? _selectedAddress
                                     : 'Select outlet’s location on the map',
-                                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                    fontSize: 16, fontWeight: FontWeight.bold),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),
                             Icon(
-                              _isDropdownExpanded ? Icons.arrow_drop_up : Icons.arrow_drop_down,
+                              _isDropdownExpanded
+                                  ? Icons.arrow_drop_up
+                                  : Icons.arrow_drop_down,
                             ),
                           ],
                         ),
@@ -413,11 +435,14 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                   ],
                 ),
 
-
-                SizedBox(height: 7,),
+                SizedBox(
+                  height: 7,
+                ),
                 AnimatedContainer(
                   duration: Duration(milliseconds: 300),
-                  height: _isDropdownExpanded ? MediaQuery.of(context).size.height * 0.5 : 0,
+                  height: _isDropdownExpanded
+                      ? MediaQuery.of(context).size.height * 0.5
+                      : 0,
                   child: SingleChildScrollView(
                     child: Column(
                       children: [
@@ -427,9 +452,11 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                             controller: _searchController,
                             decoration: InputDecoration(
                               hintText: 'Enter your restaurant’s location',
-                              prefixIcon: Icon(Icons.search, color: Colors.grey),
+                              prefixIcon:
+                              Icon(Icons.search, color: Colors.grey),
                               suffixIcon: IconButton(
-                                icon: Icon(Icons.my_location, color: Colors.grey),
+                                icon:
+                                Icon(Icons.my_location, color: Colors.grey),
                                 onPressed: () {
                                   _getCurrentLocation();
                                 },
@@ -440,14 +467,17 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                               ),
                               filled: true,
                               fillColor: Colors.grey.shade200,
-                              contentPadding: EdgeInsets.symmetric(vertical: 15.0, horizontal: 20.0),
+                              contentPadding: EdgeInsets.symmetric(
+                                  vertical: 15.0, horizontal: 20.0),
                             ),
                             onSubmitted: (query) {
                               _searchLocation(query);
                             },
                           ),
                         ),
-                        SizedBox(height: 5,),
+                        SizedBox(
+                          height: 5,
+                        ),
                         SizedBox(
                           height: 300,
                           child: GoogleMap(
@@ -479,7 +509,6 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                   items: _categories.map((String category) {
                     return DropdownMenuItem<String>(
                       value: category,
-
                       child: Text(category),
                     );
                   }).toList(),
@@ -498,10 +527,11 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                 ),
                 SizedBox(height: 20),
 
+// Use the button style and loading indicator in your widget
                 Container(
                   width: double.infinity,
-                  height: 45,
-                  child: MaterialButton(
+                  height: 55,
+                  child: ElevatedButton(
                     onPressed: _isLoading
                         ? null
                         : () async {
@@ -509,19 +539,22 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                         _isLocationValid = _isLocationSelected;
                         _isImageValid = _selectedImage != null;
                       });
-                      if (_formKey.currentState!.validate() && _isLocationValid && _isImageValid) {
+                      if (_formKey.currentState!.validate() &&
+                          _isLocationValid &&
+                          _isImageValid) {
                         await _registerRestaurant();
                       }
                     },
-                    color: Colors.orange,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
+                    style: buttonStyle.copyWith(
+                      shape: MaterialStateProperty.all(
+                        RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                      ),
                     ),
                     child: _isLoading
-                        ? CircularProgressIndicator(
-                      valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                    )
-                        : Text(
+                        ? loadingIndicator
+                        : const Text(
                       'Restaurant Register',
                       style: TextStyle(
                         color: Colors.white,
@@ -531,8 +564,6 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
                     ),
                   ),
                 ),
-
-
               ],
             ),
           ),
@@ -542,7 +573,8 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
   }
 
   Future<void> _pickImageFromGallery() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    final pickedFile =
+    await ImagePicker().pickImage(source: ImageSource.gallery);
 
     setState(() {
       if (pickedFile != null) {
@@ -552,7 +584,8 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
   }
 
   Future<void> _pickImageFromCamera() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.camera);
+    final pickedFile =
+    await ImagePicker().pickImage(source: ImageSource.camera);
 
     setState(() {
       if (pickedFile != null) {
@@ -580,9 +613,12 @@ class _RestaurantRegistrationPageState extends State<RestaurantRegistrationPage>
 
       // Navigate to HomePage
       Future.delayed(Duration(seconds: 3), () {
-        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => HomePage(),));
+        Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => HomePage(),
+            ));
       });
-
     } catch (e) {
       // Handle registration error (e.g., show error message)
       ScaffoldMessenger.of(context).showSnackBar(
